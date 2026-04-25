@@ -1,0 +1,13 @@
+DerivedData/
+build/
+dist/
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+.DS_Store
+*.swp
+*.log
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcarchive

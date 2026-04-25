@@ -1,0 +1,50 @@
+# Distribution
+
+CommandNest can be distributed as a zipped `.app` bundle so users do not need Xcode.
+
+## Local Packaging
+
+```sh
+Scripts/package_release.sh
+```
+
+The script creates:
+
+```text
+dist/CommandNest-<version>-<build>.zip
+dist/CommandNest-<version>-<build>.sha256
+```
+
+Without a `CODESIGN_IDENTITY`, the script applies an ad-hoc signature. This is enough for local testing, but macOS Gatekeeper may show a warning for downloaded builds.
+
+## Developer ID Signing
+
+For a smoother public download, build with a Developer ID Application certificate:
+
+```sh
+CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" Scripts/package_release.sh
+```
+
+Then notarize the zip with Apple:
+
+```sh
+xcrun notarytool submit dist/CommandNest-1.0-1.zip \
+  --apple-id "you@example.com" \
+  --team-id "TEAMID" \
+  --password "app-specific-password" \
+  --wait
+```
+
+After notarization succeeds, staple the ticket to the app before zipping if you are distributing the raw `.app`, or distribute the notarized zip as the GitHub release asset.
+
+## GitHub Release
+
+Tag a release:
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The `Release` workflow builds the zip and attaches it to a GitHub Release.
+

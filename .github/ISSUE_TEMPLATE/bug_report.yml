@@ -1,0 +1,28 @@
+name: Bug Report
+description: Report something that is broken.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the prompt, model, and what CommandNest did.
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "Example: macOS 14.6"
+  - type: input
+    id: version
+    attributes:
+      label: CommandNest version
+      placeholder: "Example: 1.0"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Do not paste API keys or secrets.
+
