@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Added macOS privacy usage descriptions for Desktop, Documents, Downloads, removable volume, and network volume access.
+- Updated GitHub Actions checkout usage for current hosted runners.
+
 ## 1.0.0
 
 - Initial open-source release of CommandNest.
@@ -10,4 +15,3 @@
 - Local Agent Mode for file, shell, and open-item tools.
 - Native local actions for organizing folders, undoing organization, and creating text files.
 - XCTest coverage for settings migrations and local file actions.
-

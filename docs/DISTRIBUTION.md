@@ -28,7 +28,7 @@ CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" Scripts/package
 Then notarize the zip with Apple:
 
 ```sh
-xcrun notarytool submit dist/CommandNest-1.0-1.zip \
+xcrun notarytool submit dist/CommandNest-<version>-<build>.zip \
   --apple-id "you@example.com" \
   --team-id "TEAMID" \
   --password "app-specific-password" \
@@ -42,9 +42,8 @@ After notarization succeeds, staple the ticket to the app before zipping if you 
 Tag a release:
 
 ```sh
-git tag v1.0.0
-git push origin v1.0.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 The `Release` workflow builds the zip and attaches it to a GitHub Release.
-

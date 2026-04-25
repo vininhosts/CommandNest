@@ -15,16 +15,26 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.0.1</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>CommandNest needs Desktop access only when you ask the local agent to inspect or organize files there.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>CommandNest needs Documents access only when you ask the local agent to inspect, create, edit, or organize files there.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>CommandNest needs Downloads access only when you ask the local agent to inspect or organize downloaded files.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 CommandNest. All rights reserved.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>CommandNest needs network volume access only when you ask the local agent to work with files on mounted network drives.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>CommandNest needs removable volume access only when you ask the local agent to work with files on external drives.</string>
 </dict>
 </plist>
