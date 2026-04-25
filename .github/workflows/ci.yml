@@ -11,7 +11,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Show Xcode
         run: xcodebuild -version
@@ -38,4 +38,3 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=macOS' \
             build
-
