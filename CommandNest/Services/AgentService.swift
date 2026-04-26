@@ -6,8 +6,16 @@ protocol AgentServicing {
         apiKey: String,
         model: String,
         messages: [ChatMessage],
-        onToolEvent: @escaping @MainActor (String) -> Void
+        onToolEvent: @escaping @MainActor (String) -> Void,
+        confirmTool: @escaping @MainActor (AgentToolPreview) async -> Bool
     ) async throws -> String
+}
+
+struct AgentToolPreview: Equatable {
+    let toolName: String
+    let title: String
+    let detail: String
+    let requiresConfirmation: Bool
 }
 
 enum AgentServiceError: LocalizedError {
@@ -15,6 +23,7 @@ enum AgentServiceError: LocalizedError {
     case unknownTool(String)
     case commandTimedOut
     case missingPath
+    case blockedShellCommand
 
     var errorDescription: String? {
         switch self {
@@ -26,6 +35,8 @@ enum AgentServiceError: LocalizedError {
             return "The shell command timed out."
         case .missingPath:
             return "The requested path does not exist."
+        case .blockedShellCommand:
+            return "CommandNest refused to run a shell command that appears to target the system destructively."
         }
     }
 }
@@ -43,7 +54,8 @@ final class AgentService: AgentServicing {
         apiKey: String,
         model: String,
         messages: [ChatMessage],
-        onToolEvent: @escaping @MainActor (String) -> Void
+        onToolEvent: @escaping @MainActor (String) -> Void,
+        confirmTool: @escaping @MainActor (AgentToolPreview) async -> Bool
     ) async throws -> String {
         var payloadMessages = messages.map {
             OpenRouterChatMessagePayload(role: $0.role.rawValue, content: agentSystemPromptIfNeeded(for: $0))
@@ -86,7 +98,23 @@ final class AgentService: AgentServicing {
             )
 
             for toolCall in result.toolCalls {
-                await onToolEvent("Running \(toolCall.function.name)")
+                let preview = Self.preview(for: toolCall)
+                await onToolEvent("Requested \(preview.title)")
+                if preview.requiresConfirmation {
+                    guard await confirmTool(preview) else {
+                        await onToolEvent("Skipped \(preview.title)")
+                        payloadMessages.append(
+                            OpenRouterChatMessagePayload(
+                                role: "tool",
+                                content: "The user declined this local action. Do not attempt it again unless the user asks.",
+                                toolCallID: toolCall.id
+                            )
+                        )
+                        continue
+                    }
+                }
+
+                await onToolEvent("Running \(preview.title)")
                 let output = await execute(toolCall)
                 payloadMessages.append(
                     OpenRouterChatMessagePayload(
@@ -109,7 +137,7 @@ final class AgentService: AgentServicing {
         return """
         \(message.content)
 
-        Local Agent Mode is enabled. You are an acting desktop and coding agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, open, or otherwise change something on this Mac, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. The user has requested broad local access, but macOS privacy permissions may still block protected locations until granted in System Settings. After using tools, explain what you changed or found concisely.
+        Local Agent Mode is enabled. You are an acting desktop and coding agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, open, or otherwise change something on this Mac, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. The user has requested broad local access, but macOS privacy permissions may still block protected locations until granted in System Settings. Destructive operations require user confirmation. After using tools, explain what you changed or found concisely.
         """
     }
 
@@ -236,6 +264,9 @@ final class AgentService: AgentServicing {
 
     private func runShellCommand(_ arguments: [String: Any]) async throws -> String {
         let command = try Self.stringValue("command", in: arguments)
+        guard !Self.isBlockedShellCommand(command) else {
+            throw AgentServiceError.blockedShellCommand
+        }
         let workingDirectory = (try? Self.stringValue("working_directory", in: arguments)).map(Self.expandedPath)
         let timeout = min(max(Self.intValue("timeout_seconds", in: arguments) ?? 30, 1), 120)
 
@@ -333,6 +364,71 @@ final class AgentService: AgentServicing {
         }
 
         return String(text.prefix(maxCharacters)) + "\n... output truncated ..."
+    }
+
+    static func preview(for toolCall: OpenRouterToolCall) -> AgentToolPreview {
+        let arguments = (try? decodeArguments(toolCall.function.arguments)) ?? [:]
+        let name = toolCall.function.name
+
+        switch name {
+        case "list_directory":
+            let path = (try? stringValue("path", in: arguments)).map(expandedPath) ?? "unknown path"
+            return AgentToolPreview(toolName: name, title: "List Directory", detail: path, requiresConfirmation: false)
+        case "read_text_file":
+            let path = (try? stringValue("path", in: arguments)).map(expandedPath) ?? "unknown path"
+            return AgentToolPreview(toolName: name, title: "Read Text File", detail: path, requiresConfirmation: false)
+        case "write_text_file":
+            let path = (try? stringValue("path", in: arguments)).map(expandedPath) ?? "unknown path"
+            let byteCount = ((try? stringValue("content", in: arguments)) ?? "").utf8.count
+            return AgentToolPreview(toolName: name, title: "Write Text File", detail: "\(path)\n\(byteCount) bytes", requiresConfirmation: true)
+        case "create_directory":
+            let path = (try? stringValue("path", in: arguments)).map(expandedPath) ?? "unknown path"
+            return AgentToolPreview(toolName: name, title: "Create Directory", detail: path, requiresConfirmation: true)
+        case "move_item":
+            let source = (try? stringValue("source_path", in: arguments)).map(expandedPath) ?? "unknown source"
+            let destination = (try? stringValue("destination_path", in: arguments)).map(expandedPath) ?? "unknown destination"
+            return AgentToolPreview(toolName: name, title: "Move Item", detail: "\(source)\n-> \(destination)", requiresConfirmation: true)
+        case "copy_item":
+            let source = (try? stringValue("source_path", in: arguments)).map(expandedPath) ?? "unknown source"
+            let destination = (try? stringValue("destination_path", in: arguments)).map(expandedPath) ?? "unknown destination"
+            return AgentToolPreview(toolName: name, title: "Copy Item", detail: "\(source)\n-> \(destination)", requiresConfirmation: true)
+        case "trash_item":
+            let path = (try? stringValue("path", in: arguments)).map(expandedPath) ?? "unknown path"
+            return AgentToolPreview(toolName: name, title: "Move to Trash", detail: path, requiresConfirmation: true)
+        case "run_shell_command":
+            let command = (try? stringValue("command", in: arguments)) ?? "unknown command"
+            let directory = (try? stringValue("working_directory", in: arguments)).map(expandedPath)
+            let detail = directory.map { "cd \($0)\n\(command)" } ?? command
+            return AgentToolPreview(toolName: name, title: "Run Shell Command", detail: detail, requiresConfirmation: true)
+        case "open_item":
+            let target = (try? stringValue("path_or_url", in: arguments)) ?? "unknown target"
+            return AgentToolPreview(toolName: name, title: "Open Item", detail: target, requiresConfirmation: true)
+        default:
+            return AgentToolPreview(toolName: name, title: name, detail: toolCall.function.arguments, requiresConfirmation: true)
+        }
+    }
+
+    static func isBlockedShellCommand(_ command: String) -> Bool {
+        let normalized = command
+            .lowercased()
+            .replacingOccurrences(of: #"\\\s*\n"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let blockedPatterns = [
+            #"rm\s+-[^\n;|&]*r[^\n;|&]*f[^\n;|&]*(/|~|\$home)(\s|$)"#,
+            #"rm\s+-[^\n;|&]*f[^\n;|&]*r[^\n;|&]*(/|~|\$home)(\s|$)"#,
+            #"diskutil\s+(erase|partition|apfs\s+delete)"#,
+            #"mkfs(\.|\s)"#,
+            #"dd\s+if=.*\s+of=/dev/"#,
+            #":\s*\(\)\s*\{\s*:\s*\|\s*:"#,
+            #"chmod\s+-r\s+777\s+/"#,
+            #"chown\s+-r\s+.*\s+/"#
+        ]
+
+        return blockedPatterns.contains { pattern in
+            normalized.range(of: pattern, options: .regularExpression) != nil
+        }
     }
 
     private static func needsLocalTools(_ messages: [ChatMessage]) -> Bool {

@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 @MainActor
 final class AssistantViewModel: ObservableObject {
@@ -19,6 +20,7 @@ final class AssistantViewModel: ObservableObject {
     @Published private(set) var isSending = false
     @Published private(set) var isRefreshingModels = false
     @Published var errorMessage: String?
+    @Published private(set) var agentActivity: [String] = []
 
     private let client: OpenRouterServicing
     private let agentService: AgentServicing
@@ -26,6 +28,7 @@ final class AssistantViewModel: ObservableObject {
     private let keychain: KeychainServicing
     private var systemPrompt: String
     private var agentModeEnabled: Bool
+    private var confirmAgentActions: Bool
     private var isReloadingPreferences = false
 
     init(
@@ -43,6 +46,7 @@ final class AssistantViewModel: ObservableObject {
         self.selectedModel = settings.selectedModelID
         self.systemPrompt = settings.systemPrompt
         self.agentModeEnabled = settings.agentModeEnabled
+        self.confirmAgentActions = settings.confirmAgentActions
         self.messages = [ChatMessage(role: .system, content: settings.systemPrompt)]
     }
 
@@ -61,6 +65,7 @@ final class AssistantViewModel: ObservableObject {
         selectedModel = settings.selectedModelID
         systemPrompt = settings.systemPrompt
         agentModeEnabled = settings.agentModeEnabled
+        confirmAgentActions = settings.confirmAgentActions
         isReloadingPreferences = false
 
         if let systemIndex = messages.firstIndex(where: { $0.role == .system }) {
@@ -101,6 +106,7 @@ final class AssistantViewModel: ObservableObject {
         }
 
         errorMessage = nil
+        agentActivity = []
 
         prompt = ""
         isSending = true
@@ -117,7 +123,13 @@ final class AssistantViewModel: ObservableObject {
             if let localResponse = try await localActionService.handle(
                 prompt: userPrompt,
                 onEvent: { [weak self] event in
-                    self?.replaceAssistantMessage(assistantID, with: "\(event)...")
+                    self?.recordAgentActivity(event, assistantID: assistantID)
+                },
+                confirmAction: { [weak self] preview in
+                    guard let self else {
+                        return false
+                    }
+                    return await self.confirmLocalAction(preview)
                 }
             ) {
                 replaceAssistantMessage(assistantID, with: localResponse)
@@ -227,6 +239,7 @@ final class AssistantViewModel: ObservableObject {
 
     private func sendAgentPrompt(apiKey: String, model: String, requestMessages: [ChatMessage], assistantID: UUID) async {
         replaceAssistantMessage(assistantID, with: "Starting local agent...")
+        agentActivity = ["Starting local agent"]
 
         do {
             let response = try await agentService.run(
@@ -234,7 +247,13 @@ final class AssistantViewModel: ObservableObject {
                 model: model,
                 messages: requestMessages,
                 onToolEvent: { [weak self] event in
-                    self?.replaceAssistantMessage(assistantID, with: "\(event)...")
+                    self?.recordAgentActivity(event, assistantID: assistantID)
+                },
+                confirmTool: { [weak self] preview in
+                    guard let self else {
+                        return false
+                    }
+                    return await self.confirmAgentTool(preview)
                 }
             )
             replaceAssistantMessage(assistantID, with: response)
@@ -242,6 +261,51 @@ final class AssistantViewModel: ObservableObject {
             removeEmptyAssistantMessage(assistantID)
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func recordAgentActivity(_ event: String, assistantID: UUID) {
+        agentActivity.append(event)
+        replaceAssistantMessage(assistantID, with: formattedAgentProgress())
+    }
+
+    private func formattedAgentProgress() -> String {
+        let rows = agentActivity.suffix(12).map { "- \($0)" }.joined(separator: "\n")
+        return "Local agent is working...\n\n\(rows)"
+    }
+
+    private func confirmLocalAction(_ preview: LocalActionPreview) async -> Bool {
+        guard confirmAgentActions else {
+            return true
+        }
+
+        return presentActionConfirmation(
+            title: preview.title,
+            detail: preview.detail,
+            isDestructive: preview.isDestructive
+        )
+    }
+
+    private func confirmAgentTool(_ preview: AgentToolPreview) async -> Bool {
+        guard confirmAgentActions && preview.requiresConfirmation else {
+            return true
+        }
+
+        return presentActionConfirmation(
+            title: preview.title,
+            detail: preview.detail,
+            isDestructive: preview.requiresConfirmation
+        )
+    }
+
+    private func presentActionConfirmation(title: String, detail: String, isDestructive: Bool) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Allow \(title)?"
+        alert.informativeText = detail
+        alert.alertStyle = isDestructive ? .warning : .informational
+        alert.addButton(withTitle: "Allow")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        return alert.runModal() == .alertFirstButtonReturn
     }
 
     private static func shouldUseLocalAgent(for prompt: String) -> Bool {

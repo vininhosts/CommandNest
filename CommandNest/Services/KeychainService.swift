@@ -25,8 +25,11 @@ enum KeychainError: LocalizedError {
 }
 
 final class KeychainService: KeychainServicing {
-    private let service = "com.local.CommandNest.openrouter"
-    private let legacyService = "com.local.ShortcutAI.openrouter"
+    private let service = "\(Constants.bundleIdentifier).openrouter"
+    private let legacyServices = [
+        "com.local.CommandNest.openrouter",
+        "com.local.ShortcutAI.openrouter"
+    ]
     private let account = "OpenRouterAPIKey"
 
     func saveAPIKey(_ apiKey: String) throws {
@@ -68,12 +71,14 @@ final class KeychainService: KeychainServicing {
             return currentKey
         }
 
-        guard let legacyKey = try loadAPIKey(service: legacyService) else {
-            return nil
+        for legacyService in legacyServices {
+            if let legacyKey = try loadAPIKey(service: legacyService) {
+                try? saveAPIKey(legacyKey)
+                return legacyKey
+            }
         }
 
-        try? saveAPIKey(legacyKey)
-        return legacyKey
+        return nil
     }
 
     private func loadAPIKey(service: String) throws -> String? {
@@ -101,7 +106,7 @@ final class KeychainService: KeychainServicing {
     }
 
     func deleteAPIKey() throws {
-        for service in [service, legacyService] {
+        for service in [service] + legacyServices {
             let status = SecItemDelete(baseQuery(service: service) as CFDictionary)
             guard status == errSecSuccess || status == errSecItemNotFound else {
                 throw KeychainError.unexpectedStatus(status)

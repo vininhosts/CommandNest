@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+- Switched the app and test bundle identifiers to `io.github.vininhosts.CommandNest`.
+- Updated the OpenRouter `HTTP-Referer` header to the public GitHub repository.
+- Added first-launch onboarding and a menu bar update checker for GitHub Releases.
+- Added confirmation prompts and activity logging for local agent file, app, and shell actions.
+- Added tests for action confirmation, shell-command safety, and version comparison.
+
 ## 1.0.1
 
 - Added macOS privacy usage descriptions for Desktop, Documents, Downloads, removable volume, and network volume access.

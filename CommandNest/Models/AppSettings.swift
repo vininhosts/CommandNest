@@ -127,6 +127,7 @@ struct AppSettings: Equatable {
     var systemPrompt: String
     var shortcut: GlobalKeyboardShortcut
     var agentModeEnabled: Bool
+    var confirmAgentActions: Bool
 
     static let didChangeNotification = Notification.Name("AppSettingsDidChange")
 
@@ -136,8 +137,10 @@ struct AppSettings: Equatable {
         static let systemPrompt = "systemPrompt"
         static let shortcut = "globalShortcut"
         static let agentModeEnabled = "agentModeEnabled"
+        static let confirmAgentActions = "confirmAgentActions"
         static let didMigrateDefaultModelToFreeRouter = "didMigrateDefaultModelToFreeRouter"
         static let didMigrateAgentModeDefault = "didMigrateAgentModeDefault"
+        static let didMigrateAgentConfirmationDefault = "didMigrateAgentConfirmationDefault"
     }
 
     static var defaults: AppSettings {
@@ -146,7 +149,8 @@ struct AppSettings: Equatable {
             selectedModelID: Constants.freeRouterModelID,
             systemPrompt: Constants.defaultSystemPrompt,
             shortcut: .defaultShortcut,
-            agentModeEnabled: true
+            agentModeEnabled: true,
+            confirmAgentActions: true
         )
     }
 
@@ -172,6 +176,14 @@ struct AppSettings: Equatable {
             defaults.set(true, forKey: Keys.agentModeEnabled)
             defaults.set(true, forKey: Keys.didMigrateAgentModeDefault)
         }
+        let confirmAgentActions: Bool
+        if defaults.bool(forKey: Keys.didMigrateAgentConfirmationDefault) {
+            confirmAgentActions = defaults.bool(forKey: Keys.confirmAgentActions)
+        } else {
+            confirmAgentActions = true
+            defaults.set(true, forKey: Keys.confirmAgentActions)
+            defaults.set(true, forKey: Keys.didMigrateAgentConfirmationDefault)
+        }
 
         let shortcut: GlobalKeyboardShortcut
         if let data = defaults.data(forKey: Keys.shortcut),
@@ -186,7 +198,8 @@ struct AppSettings: Equatable {
             selectedModelID: modelIDs.contains(selected) ? selected : modelIDs[0],
             systemPrompt: systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultSettings.systemPrompt : systemPrompt,
             shortcut: shortcut,
-            agentModeEnabled: agentModeEnabled
+            agentModeEnabled: agentModeEnabled,
+            confirmAgentActions: confirmAgentActions
         )
     }
 
@@ -196,8 +209,10 @@ struct AppSettings: Equatable {
         defaults.set(cleanedModels.contains(selectedModelID) ? selectedModelID : cleanedModels[0], forKey: Keys.selectedModelID)
         defaults.set(systemPrompt, forKey: Keys.systemPrompt)
         defaults.set(agentModeEnabled, forKey: Keys.agentModeEnabled)
+        defaults.set(confirmAgentActions, forKey: Keys.confirmAgentActions)
         defaults.set(true, forKey: Keys.didMigrateDefaultModelToFreeRouter)
         defaults.set(true, forKey: Keys.didMigrateAgentModeDefault)
+        defaults.set(true, forKey: Keys.didMigrateAgentConfirmationDefault)
 
         if let data = try? JSONEncoder().encode(shortcut) {
             defaults.set(data, forKey: Keys.shortcut)

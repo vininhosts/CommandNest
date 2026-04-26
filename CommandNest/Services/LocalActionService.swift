@@ -3,8 +3,15 @@ import Foundation
 protocol LocalActionServicing {
     func handle(
         prompt: String,
-        onEvent: @escaping @MainActor (String) -> Void
+        onEvent: @escaping @MainActor (String) -> Void,
+        confirmAction: @escaping @MainActor (LocalActionPreview) async -> Bool
     ) async throws -> String?
+}
+
+struct LocalActionPreview: Equatable {
+    let title: String
+    let detail: String
+    let isDestructive: Bool
 }
 
 enum LocalActionError: LocalizedError {
@@ -33,25 +40,51 @@ final class LocalActionService: LocalActionServicing {
 
     func handle(
         prompt: String,
-        onEvent: @escaping @MainActor (String) -> Void
+        onEvent: @escaping @MainActor (String) -> Void,
+        confirmAction: @escaping @MainActor (LocalActionPreview) async -> Bool
     ) async throws -> String? {
         let normalized = prompt.lowercased()
 
         if shouldUndoOrganization(normalized) {
-            await onEvent("Undoing organization")
             let folder = try targetFolder(from: prompt, normalizedPrompt: normalized)
+            let preview = LocalActionPreview(
+                title: "Undo File Organization",
+                detail: "Move files back using the latest manifest in:\n\(folder.path)",
+                isDestructive: true
+            )
+            guard await confirmAction(preview) else {
+                return "Cancelled undo organization."
+            }
+            await onEvent("Undoing organization in \(folder.path)")
             return try undoLastOrganization(in: folder)
         }
 
         if shouldOrganizeFiles(normalized) {
-            await onEvent("Organizing files")
             let folder = try targetFolder(from: prompt, normalizedPrompt: normalized)
+            let preview = LocalActionPreview(
+                title: "Organize Files",
+                detail: "Move loose files into category folders and write an undo manifest in:\n\(folder.path)",
+                isDestructive: true
+            )
+            guard await confirmAction(preview) else {
+                return "Cancelled file organization."
+            }
+            await onEvent("Organizing files in \(folder.path)")
             return try organizeFolder(folder)
         }
 
         if shouldCreateFile(normalized) {
-            await onEvent("Creating file")
-            return try createTextFile(from: prompt)
+            let request = try createFileRequest(from: prompt)
+            let preview = LocalActionPreview(
+                title: "Create Text File",
+                detail: "Write \(request.content.utf8.count) bytes to:\n\(request.destination.path)",
+                isDestructive: fileManager.fileExists(atPath: request.destination.path)
+            )
+            guard await confirmAction(preview) else {
+                return "Cancelled file creation."
+            }
+            await onEvent("Creating \(request.destination.path)")
+            return try createTextFile(request)
         }
 
         return nil
@@ -228,7 +261,12 @@ final class LocalActionService: LocalActionServicing {
         """
     }
 
-    private func createTextFile(from prompt: String) throws -> String {
+    private struct CreateFileRequest {
+        let destination: URL
+        let content: String
+    }
+
+    private func createFileRequest(from prompt: String) throws -> CreateFileRequest {
         guard let filePath = requestedFilePath(from: prompt) else {
             throw LocalActionError.unsupportedCreateFilePrompt
         }
@@ -243,12 +281,16 @@ final class LocalActionService: LocalActionServicing {
             destination = desktop.appendingPathComponent(filePath)
         }
 
-        try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        return CreateFileRequest(destination: destination, content: content)
+    }
 
-        let finalURL = fileManager.fileExists(atPath: destination.path)
-            ? uniqueDestination(for: destination.lastPathComponent, in: destination.deletingLastPathComponent())
-            : destination
-        try content.write(to: finalURL, atomically: true, encoding: .utf8)
+    private func createTextFile(_ request: CreateFileRequest) throws -> String {
+        try fileManager.createDirectory(at: request.destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+
+        let finalURL = fileManager.fileExists(atPath: request.destination.path)
+            ? uniqueDestination(for: request.destination.lastPathComponent, in: request.destination.deletingLastPathComponent())
+            : request.destination
+        try request.content.write(to: finalURL, atomically: true, encoding: .utf8)
 
         return "Created \(finalURL.path)."
     }

@@ -26,6 +26,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.selectedModelID, Constants.freeRouterModelID)
         XCTAssertEqual(settings.modelIDs.first, Constants.freeRouterModelID)
         XCTAssertTrue(settings.agentModeEnabled)
+        XCTAssertTrue(settings.confirmAgentActions)
     }
 
     func testModelNormalizationDeduplicatesAndPrependsFreeRouter() {
@@ -59,7 +60,8 @@ final class AppSettingsTests: XCTestCase {
             selectedModelID: "custom/model",
             systemPrompt: "You are direct.",
             shortcut: shortcut,
-            agentModeEnabled: false
+            agentModeEnabled: false,
+            confirmAgentActions: false
         )
 
         settings.save(to: defaults, notify: false)
@@ -69,5 +71,6 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.systemPrompt, "You are direct.")
         XCTAssertEqual(loaded.shortcut, shortcut)
         XCTAssertFalse(loaded.agentModeEnabled)
+        XCTAssertFalse(loaded.confirmAgentActions)
     }
 }

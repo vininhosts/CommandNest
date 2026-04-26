@@ -42,7 +42,7 @@ if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
   codesign --force --deep --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$APP_STAGED"
 else
   echo "No CODESIGN_IDENTITY set. Applying ad-hoc signature for local distribution."
-  codesign --force --deep --sign - "$APP_STAGED"
+  codesign --force --deep --options runtime --sign - "$APP_STAGED"
 fi
 
 codesign --verify --deep --strict "$APP_STAGED"

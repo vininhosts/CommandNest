@@ -15,6 +15,8 @@ struct AssistantWindowView: View {
 
             conversation
 
+            agentActivity
+
             promptEditor
 
             footer
@@ -130,6 +132,30 @@ struct AssistantWindowView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
         )
+    }
+
+    @ViewBuilder
+    private var agentActivity: some View {
+        if !viewModel.agentActivity.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Agent Activity")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                ForEach(Array(viewModel.agentActivity.suffix(5).enumerated()), id: \.offset) { _, event in
+                    Text(event)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.primary.opacity(0.045))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
     }
 
     private var footer: some View {

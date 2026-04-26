@@ -7,6 +7,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var systemPrompt: String
     @Published var shortcut: GlobalKeyboardShortcut
     @Published var agentModeEnabled: Bool
+    @Published var confirmAgentActions: Bool
     @Published var isRefreshingModels = false
     @Published var statusMessage: String?
     @Published var errorMessage: String?
@@ -25,6 +26,7 @@ final class SettingsViewModel: ObservableObject {
         self.systemPrompt = settings.systemPrompt
         self.shortcut = settings.shortcut
         self.agentModeEnabled = settings.agentModeEnabled
+        self.confirmAgentActions = settings.confirmAgentActions
     }
 
     var parsedModels: [String] {
@@ -46,7 +48,8 @@ final class SettingsViewModel: ObservableObject {
             selectedModelID: selectedModel,
             systemPrompt: prompt.isEmpty ? Constants.defaultSystemPrompt : systemPrompt,
             shortcut: shortcut,
-            agentModeEnabled: agentModeEnabled
+            agentModeEnabled: agentModeEnabled,
+            confirmAgentActions: confirmAgentActions
         )
 
         do {

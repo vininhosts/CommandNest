@@ -9,9 +9,11 @@ Local Agent Mode can read and write files, move items, open files or URLs, and r
 Recommended review points:
 
 - Prefer the smallest local action that satisfies a request.
+- Keep confirmation prompts in place for writes, moves, Trash, app/URL opens, shell commands, and native file organization.
+- Keep read-only actions separate from mutating actions so users can safely inspect before approving changes.
 - Preserve useful partial output when a request fails.
 - Avoid silently overwriting user files.
-- Keep destructive actions visible in the final assistant response.
+- Keep local actions visible in the assistant activity log and final assistant response.
 - Respect macOS privacy protections. The app cannot grant Full Disk Access, Accessibility, or Screen Recording permissions to itself.
 
 ## Reporting Vulnerabilities

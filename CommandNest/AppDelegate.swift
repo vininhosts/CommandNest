@@ -7,8 +7,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var assistantWindow: AssistantPanel?
     private var settingsWindow: NSWindow?
+    private var onboardingWindow: NSWindow?
     private let assistantViewModel = AssistantViewModel()
     private let hotKeyService = HotKeyService.shared
+    private let updateService: UpdateServicing = GitHubUpdateService()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -20,6 +22,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if CommandLine.arguments.contains("--open-settings") {
             DispatchQueue.main.async { [weak self] in
                 self?.showSettings()
+            }
+        } else if !UserDefaults.standard.bool(forKey: Constants.onboardingCompletedDefaultsKey) {
+            DispatchQueue.main.async { [weak self] in
+                self?.showOnboarding()
             }
         }
 
@@ -51,6 +57,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showSettings()
     }
 
+    @objc private func showOnboardingFromMenu() {
+        showOnboarding()
+    }
+
+    @objc private func checkForUpdatesFromMenu() {
+        Task {
+            await checkForUpdates()
+        }
+    }
+
     @objc private func quit() {
         NSApp.terminate(nil)
     }
@@ -71,6 +87,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Show Assistant", action: #selector(showAssistantFromMenu), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Check for Updates...", action: #selector(checkForUpdatesFromMenu), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Welcome Guide", action: #selector(showOnboardingFromMenu), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Settings", action: #selector(showSettingsFromMenu), keyEquivalent: ","))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q"))
@@ -164,6 +182,73 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
+    }
+
+    private func showOnboarding() {
+        if let onboardingWindow {
+            NSApp.activate(ignoringOtherApps: true)
+            onboardingWindow.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let view = OnboardingView(
+            onOpenSettings: { [weak self] in
+                UserDefaults.standard.set(true, forKey: Constants.onboardingCompletedDefaultsKey)
+                self?.onboardingWindow?.orderOut(nil)
+                self?.showSettings()
+            },
+            onContinue: { [weak self] in
+                UserDefaults.standard.set(true, forKey: Constants.onboardingCompletedDefaultsKey)
+                self?.onboardingWindow?.orderOut(nil)
+            }
+        )
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 400),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Welcome to \(Constants.appName)"
+        window.contentView = NSHostingView(rootView: view)
+        window.isReleasedWhenClosed = false
+        window.center()
+        onboardingWindow = window
+
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    private func checkForUpdates() async {
+        do {
+            let release = try await updateService.latestRelease()
+            let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+            let hasUpdate = GitHubUpdateService.isRelease(release.tagName, newerThan: currentVersion)
+
+            let alert = NSAlert()
+            alert.messageText = hasUpdate ? "CommandNest update available" : "CommandNest is up to date"
+            alert.informativeText = hasUpdate
+                ? "\(release.name) is available. The release page includes the app zip and checksum."
+                : "You are running \(Constants.appName) \(currentVersion). Latest release: \(release.tagName)."
+            alert.alertStyle = hasUpdate ? .informational : .informational
+            alert.addButton(withTitle: hasUpdate ? "Open Release" : "OK")
+            if hasUpdate {
+                alert.addButton(withTitle: "Cancel")
+            }
+
+            NSApp.activate(ignoringOtherApps: true)
+            if alert.runModal() == .alertFirstButtonReturn, hasUpdate {
+                NSWorkspace.shared.open(release.pageURL)
+            }
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "Could not check for updates"
+            alert.informativeText = error.localizedDescription
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "OK")
+            NSApp.activate(ignoringOtherApps: true)
+            alert.runModal()
+        }
     }
 
     private func center(window: NSWindow) {

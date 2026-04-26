@@ -88,7 +88,7 @@ Headers include:
 ```text
 Authorization: Bearer <OPENROUTER_API_KEY>
 Content-Type: application/json
-HTTP-Referer: https://github.com/local/CommandNest
+HTTP-Referer: https://github.com/vininhosts/CommandNest
 X-Title: CommandNest
 ```
 
@@ -114,6 +114,8 @@ Bundled fallback models:
 ## Local Agent Mode
 
 Settings includes `Enable local agent mode`, which is on by default for agent-like behavior. Normal chat still streams. CommandNest switches to local agent mode only when the prompt looks like a file, folder, app, code, shell, or Mac action.
+
+Settings also includes `Ask before local file, app, or shell actions`, which is on by default. Read-only directory listing and text-file reading can proceed without a prompt; writes, moves, Trash, shell commands, app/URL opens, and native file organization show a confirmation dialog first.
 
 When local agent mode is used, the selected OpenRouter model can ask CommandNest to:
 
@@ -141,6 +143,8 @@ create a file called notes.md that says hello
 
 This is intentionally powerful. It runs on your Mac, outside the App Sandbox, and uses your current user account. macOS still protects some areas until you grant permissions.
 
+The assistant window keeps a compact activity log for local agent actions so users can see what was requested, approved, skipped, and run.
+
 Useful permissions:
 
 - Full Disk Access: needed for broad file access, including protected folders.
@@ -148,6 +152,10 @@ Useful permissions:
 - Screen Recording: needed for future screen-aware workflows.
 
 CommandNest cannot grant these permissions to itself. Use the buttons in Settings to open the correct System Settings panes, then enable CommandNest.
+
+## Updates
+
+Use the menu bar item `Check for Updates...` to compare the installed version with the latest GitHub Release. This opens the release page when a newer build is available. Full automatic installation is intentionally left for a future Sparkle integration once signing and notarization are configured.
 
 ## Tests
 
@@ -199,4 +207,4 @@ CommandNestTests/
 
 ## Info.plist and Entitlements
 
-`Info.plist` sets `LSUIElement` to `true`, so CommandNest runs as a menu bar app without a Dock icon. The included entitlements file is intentionally empty because the app is not sandboxed by default. If you enable App Sandbox later, add the outbound network client entitlement and revisit local agent capabilities.
+`Info.plist` sets `LSUIElement` to `true`, so CommandNest runs as a menu bar app without a Dock icon. The production bundle identifier is `io.github.vininhosts.CommandNest`. The included entitlements file is intentionally empty because the app is not sandboxed by default. If you enable App Sandbox later, add the outbound network client entitlement and revisit local agent capabilities.

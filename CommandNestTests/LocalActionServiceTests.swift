@@ -34,7 +34,8 @@ final class LocalActionServiceTests: XCTestCase {
 
         let response = try await service.handle(
             prompt: "organize files in \"\(folder.path)\"",
-            onEvent: { _ in }
+            onEvent: { _ in },
+            confirmAction: { _ in true }
         )
 
         XCTAssertEqual(response?.contains("Organized 6 files"), true)
@@ -58,13 +59,15 @@ final class LocalActionServiceTests: XCTestCase {
 
         _ = try await service.handle(
             prompt: "organize files in \"\(folder.path)\"",
-            onEvent: { _ in }
+            onEvent: { _ in },
+            confirmAction: { _ in true }
         )
         XCTAssertFalse(fileManager.fileExists(atPath: folder.appendingPathComponent("report.pdf").path))
 
         let response = try await service.handle(
             prompt: "undo organization in \"\(folder.path)\"",
-            onEvent: { _ in }
+            onEvent: { _ in },
+            confirmAction: { _ in true }
         )
 
         XCTAssertEqual(response?.contains("Restored 2 files"), true)
@@ -77,11 +80,30 @@ final class LocalActionServiceTests: XCTestCase {
 
         let response = try await service.handle(
             prompt: "create a file called \"\(destination.path)\" that says \"hello from tests\"",
-            onEvent: { _ in }
+            onEvent: { _ in },
+            confirmAction: { _ in true }
         )
 
         XCTAssertEqual(response?.contains(destination.path), true)
         XCTAssertEqual(try String(contentsOf: destination, encoding: .utf8), "hello from tests")
+    }
+
+    func testDeclinedOrganizationDoesNotMoveFiles() async throws {
+        let report = folder.appendingPathComponent("report.pdf")
+        try write("pdf", to: report)
+
+        let response = try await service.handle(
+            prompt: "organize files in \"\(folder.path)\"",
+            onEvent: { _ in },
+            confirmAction: { preview in
+                XCTAssertEqual(preview.title, "Organize Files")
+                return false
+            }
+        )
+
+        XCTAssertEqual(response, "Cancelled file organization.")
+        XCTAssertTrue(fileManager.fileExists(atPath: report.path))
+        XCTAssertFalse(fileManager.fileExists(atPath: folder.appendingPathComponent(Constants.manifestFolderName).path))
     }
 
     private func write(_ text: String, to url: URL) throws {

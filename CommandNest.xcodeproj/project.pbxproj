@@ -17,16 +17,20 @@
 		000000000000000000000216 /* AgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000116 /* AgentService.swift */; };
 		000000000000000000000217 /* PermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000117 /* PermissionService.swift */; };
 		000000000000000000000218 /* LocalActionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000118 /* LocalActionService.swift */; };
+		000000000000000000000219 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000119 /* UpdateService.swift */; };
 		000000000000000000000208 /* AssistantViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000108 /* AssistantViewModel.swift */; };
 		000000000000000000000209 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000109 /* SettingsViewModel.swift */; };
 		000000000000000000000210 /* AssistantWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000110 /* AssistantWindowView.swift */; };
 		000000000000000000000211 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000111 /* SettingsView.swift */; };
 		000000000000000000000212 /* MessageBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000112 /* MessageBubbleView.swift */; };
 		000000000000000000000213 /* ModelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000113 /* ModelPickerView.swift */; };
+		000000000000000000000220 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000120 /* OnboardingView.swift */; };
 		000000000000000000000214 /* ClipboardHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000114 /* ClipboardHelper.swift */; };
 		000000000000000000000215 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000115 /* Constants.swift */; };
 		000000000000000000000301 /* LocalActionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000122 /* LocalActionServiceTests.swift */; };
 		000000000000000000000302 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000123 /* AppSettingsTests.swift */; };
+		000000000000000000000303 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000125 /* UpdateServiceTests.swift */; };
+		000000000000000000000304 /* AgentSafetyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000126 /* AgentSafetyTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,16 +63,20 @@
 		000000000000000000000116 /* AgentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentService.swift; sourceTree = "<group>"; };
 		000000000000000000000117 /* PermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionService.swift; sourceTree = "<group>"; };
 		000000000000000000000118 /* LocalActionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalActionService.swift; sourceTree = "<group>"; };
+		000000000000000000000119 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		000000000000000000000108 /* AssistantViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000109 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000110 /* AssistantWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantWindowView.swift; sourceTree = "<group>"; };
 		000000000000000000000111 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		000000000000000000000112 /* MessageBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubbleView.swift; sourceTree = "<group>"; };
 		000000000000000000000113 /* ModelPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPickerView.swift; sourceTree = "<group>"; };
+		000000000000000000000120 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		000000000000000000000114 /* ClipboardHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHelper.swift; sourceTree = "<group>"; };
 		000000000000000000000115 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		000000000000000000000122 /* LocalActionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalActionServiceTests.swift; sourceTree = "<group>"; };
 		000000000000000000000123 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+		000000000000000000000125 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
+		000000000000000000000126 /* AgentSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSafetyTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +154,7 @@
 				000000000000000000000116 /* AgentService.swift */,
 				000000000000000000000118 /* LocalActionService.swift */,
 				000000000000000000000117 /* PermissionService.swift */,
+				000000000000000000000119 /* UpdateService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -166,6 +175,7 @@
 				000000000000000000000111 /* SettingsView.swift */,
 				000000000000000000000112 /* MessageBubbleView.swift */,
 				000000000000000000000113 /* ModelPickerView.swift */,
+				000000000000000000000120 /* OnboardingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -184,6 +194,8 @@
 			children = (
 				000000000000000000000122 /* LocalActionServiceTests.swift */,
 				000000000000000000000123 /* AppSettingsTests.swift */,
+				000000000000000000000125 /* UpdateServiceTests.swift */,
+				000000000000000000000126 /* AgentSafetyTests.swift */,
 			);
 			path = CommandNestTests;
 			sourceTree = "<group>";
@@ -296,12 +308,14 @@
 				000000000000000000000216 /* AgentService.swift in Sources */,
 				000000000000000000000218 /* LocalActionService.swift in Sources */,
 				000000000000000000000217 /* PermissionService.swift in Sources */,
+				000000000000000000000219 /* UpdateService.swift in Sources */,
 				000000000000000000000208 /* AssistantViewModel.swift in Sources */,
 				000000000000000000000209 /* SettingsViewModel.swift in Sources */,
 				000000000000000000000210 /* AssistantWindowView.swift in Sources */,
 				000000000000000000000211 /* SettingsView.swift in Sources */,
 				000000000000000000000212 /* MessageBubbleView.swift in Sources */,
 				000000000000000000000213 /* ModelPickerView.swift in Sources */,
+				000000000000000000000220 /* OnboardingView.swift in Sources */,
 				000000000000000000000214 /* ClipboardHelper.swift in Sources */,
 				000000000000000000000215 /* Constants.swift in Sources */,
 			);
@@ -313,6 +327,8 @@
 			files = (
 				000000000000000000000301 /* LocalActionServiceTests.swift in Sources */,
 				000000000000000000000302 /* AppSettingsTests.swift in Sources */,
+				000000000000000000000303 /* UpdateServiceTests.swift in Sources */,
+				000000000000000000000304 /* AgentSafetyTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -458,7 +474,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.local.CommandNest;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.vininhosts.CommandNest;
 				PRODUCT_MODULE_NAME = CommandNest;
 				PRODUCT_NAME = CommandNest;
 				SUPPORTED_PLATFORMS = macosx;
@@ -472,8 +488,10 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = CommandNest/CommandNest.entitlements;
 				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CommandNest/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -481,7 +499,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.local.CommandNest;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.vininhosts.CommandNest;
 				PRODUCT_MODULE_NAME = CommandNest;
 				PRODUCT_NAME = CommandNest;
 				SUPPORTED_PLATFORMS = macosx;
@@ -503,7 +521,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.local.CommandNestTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.vininhosts.CommandNestTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_VERSION = 5.0;
@@ -524,7 +542,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.local.CommandNestTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.vininhosts.CommandNestTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_VERSION = 5.0;
