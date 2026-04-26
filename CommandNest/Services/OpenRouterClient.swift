@@ -2,8 +2,8 @@ import Foundation
 
 protocol OpenRouterServicing {
     func fetchModelIDs() async throws -> [String]
-    func streamChat(apiKey: String, model: String, messages: [ChatMessage]) -> AsyncThrowingStream<String, Error>
-    func completeChat(apiKey: String, model: String, messages: [ChatMessage]) async throws -> String
+    func streamChat(apiKey: String, model: String, messages: [ChatMessage]) -> AsyncThrowingStream<OpenRouterStreamChunk, Error>
+    func completeChat(apiKey: String, model: String, messages: [ChatMessage]) async throws -> OpenRouterChatResult
     func completeChatWithTools(apiKey: String, model: String, messages: [OpenRouterChatMessagePayload], tools: [OpenRouterTool]) async throws -> OpenRouterChatResult
 }
 
@@ -104,7 +104,7 @@ final class OpenRouterClient: OpenRouterServicing {
         }
     }
 
-    func streamChat(apiKey: String, model: String, messages: [ChatMessage]) -> AsyncThrowingStream<String, Error> {
+    func streamChat(apiKey: String, model: String, messages: [ChatMessage]) -> AsyncThrowingStream<OpenRouterStreamChunk, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
@@ -131,8 +131,12 @@ final class OpenRouterClient: OpenRouterServicing {
                             }
 
                             for choice in event.choices ?? [] {
-                                if let content = choice.delta.content, !content.isEmpty {
-                                    continuation.yield(content)
+                                let chunk = OpenRouterStreamChunk(
+                                    content: choice.delta.content ?? "",
+                                    reasoning: choice.delta.reasoningTextValue
+                                )
+                                if !chunk.isEmpty {
+                                    continuation.yield(chunk)
                                 }
                             }
                         } catch let error as OpenRouterClientError {
@@ -160,7 +164,7 @@ final class OpenRouterClient: OpenRouterServicing {
         }
     }
 
-    func completeChat(apiKey: String, model: String, messages: [ChatMessage]) async throws -> String {
+    func completeChat(apiKey: String, model: String, messages: [ChatMessage]) async throws -> OpenRouterChatResult {
         let request = try makeRequest(apiKey: apiKey, model: model, messages: messages, stream: false)
 
         do {
@@ -172,12 +176,17 @@ final class OpenRouterClient: OpenRouterServicing {
                 throw mapAPIError(statusCode: 200, message: error.message)
             }
 
-            guard let content = chatResponse.choices?.first?.message?.content,
-                  !content.isEmpty else {
+            guard let message = chatResponse.choices?.first?.message,
+                  let content = message.content,
+                  !content.isEmpty || !message.reasoningTextValue.isEmpty else {
                 throw OpenRouterClientError.emptyResponse
             }
 
-            return content
+            return OpenRouterChatResult(
+                content: content,
+                reasoning: message.reasoningTextValue,
+                toolCalls: message.toolCalls ?? []
+            )
         } catch let error as OpenRouterClientError {
             throw error
         } catch let error as URLError {
@@ -205,6 +214,7 @@ final class OpenRouterClient: OpenRouterServicing {
 
             return OpenRouterChatResult(
                 content: message.content ?? "",
+                reasoning: message.reasoningTextValue,
                 toolCalls: message.toolCalls ?? []
             )
         } catch let error as OpenRouterClientError {
@@ -337,7 +347,23 @@ final class OpenRouterClient: OpenRouterServicing {
 
 struct OpenRouterChatResult {
     let content: String
+    let reasoning: String
     let toolCalls: [OpenRouterToolCall]
+
+    init(content: String, reasoning: String = "", toolCalls: [OpenRouterToolCall] = []) {
+        self.content = content
+        self.reasoning = reasoning
+        self.toolCalls = toolCalls
+    }
+}
+
+struct OpenRouterStreamChunk: Equatable {
+    let content: String
+    let reasoning: String
+
+    var isEmpty: Bool {
+        content.isEmpty && reasoning.isEmpty
+    }
 }
 
 struct OpenRouterChatMessagePayload: Codable {
@@ -345,12 +371,27 @@ struct OpenRouterChatMessagePayload: Codable {
     let content: String?
     let toolCallID: String?
     let toolCalls: [OpenRouterToolCall]?
+    let reasoning: String?
+    let reasoningContent: String?
+    let reasoningText: String?
+    let thinking: String?
 
     init(role: String, content: String?, toolCallID: String? = nil, toolCalls: [OpenRouterToolCall]? = nil) {
         self.role = role
         self.content = content
         self.toolCallID = toolCallID
         self.toolCalls = toolCalls
+        self.reasoning = nil
+        self.reasoningContent = nil
+        self.reasoningText = nil
+        self.thinking = nil
+    }
+
+    var reasoningTextValue: String {
+        [reasoning, reasoningContent, reasoningText, thinking]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n\n")
     }
 
     enum CodingKeys: String, CodingKey {
@@ -358,6 +399,10 @@ struct OpenRouterChatMessagePayload: Codable {
         case content
         case toolCallID = "tool_call_id"
         case toolCalls = "tool_calls"
+        case reasoning
+        case reasoningContent = "reasoning_content"
+        case reasoningText = "reasoning_text"
+        case thinking
     }
 }
 
@@ -437,6 +482,25 @@ private struct StreamResponse: Decodable {
 
     struct Delta: Decodable {
         let content: String?
+        let reasoning: String?
+        let reasoningContent: String?
+        let reasoningText: String?
+        let thinking: String?
+
+        var reasoningTextValue: String {
+            [reasoning, reasoningContent, reasoningText, thinking]
+                .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: "\n\n")
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case content
+            case reasoning
+            case reasoningContent = "reasoning_content"
+            case reasoningText = "reasoning_text"
+            case thinking
+        }
     }
 }
 

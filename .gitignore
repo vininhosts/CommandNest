@@ -11,3 +11,5 @@ xcuserdata/
 *.dSYM.zip
 *.dSYM
 *.xcarchive
+node_modules/
+CrossPlatform/dist/

@@ -10,11 +10,13 @@ struct ChatMessage: Identifiable, Codable, Equatable {
     var id: UUID
     var role: Role
     var content: String
+    var reasoning: String
 
-    init(id: UUID = UUID(), role: Role, content: String) {
+    init(id: UUID = UUID(), role: Role, content: String, reasoning: String = "") {
         self.id = id
         self.role = role
         self.content = content
+        self.reasoning = reasoning
     }
 
     enum CodingKeys: String, CodingKey {
@@ -27,6 +29,7 @@ struct ChatMessage: Identifiable, Codable, Equatable {
         self.id = UUID()
         self.role = try container.decode(Role.self, forKey: .role)
         self.content = try container.decode(String.self, forKey: .content)
+        self.reasoning = ""
     }
 
     func encode(to encoder: Encoder) throws {

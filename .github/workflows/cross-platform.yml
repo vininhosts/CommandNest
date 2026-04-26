@@ -1,44 +1,13 @@
-name: Release
+name: Cross-Platform Desktop
 
 on:
   push:
-    tags:
-      - "v*"
-
-permissions:
-  contents: write
+    branches: [main]
+  pull_request:
 
 jobs:
   package:
-    name: Package macOS App
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Package
-        run: Scripts/package_release.sh
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
-            gh release upload "${GITHUB_REF_NAME}" \
-              dist/CommandNest-*.zip \
-              dist/CommandNest-*.sha256 \
-              --clobber
-          else
-            gh release create "${GITHUB_REF_NAME}" \
-              dist/CommandNest-*.zip \
-              dist/CommandNest-*.sha256 \
-              --title "CommandNest ${GITHUB_REF_NAME}" \
-              --notes-file RELEASE_NOTES.md
-          fi
-
-  package-cross-platform:
-    name: Package ${{ matrix.label }} App
-    needs: package
+    name: Package ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -67,6 +36,12 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Syntax check
+        run: |
+          node --check src/main.js
+          node --check src/preload.js
+          node --check src/renderer/app.js
+
       - name: Package
         run: npm run ${{ matrix.script }}
 
@@ -83,13 +58,10 @@ jobs:
           Compress-Archive -Path dist/CommandNest-win32-x64 -DestinationPath dist/CommandNest-win32-x64.zip -Force
           Compress-Archive -Path dist/CommandNest-win32-arm64 -DestinationPath dist/CommandNest-win32-arm64.zip -Force
 
-      - name: Upload to GitHub Release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          files=()
-          while IFS= read -r -d '' file; do
-            files+=("$file")
-          done < <(find dist -maxdepth 1 \( -name '*.zip' -o -name '*.tar.gz' \) -print0)
-          gh release upload "${GITHUB_REF_NAME}" "${files[@]}" --clobber
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: commandnest-${{ matrix.label }}
+          path: |
+            CrossPlatform/dist/*.zip
+            CrossPlatform/dist/*.tar.gz

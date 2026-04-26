@@ -39,12 +39,11 @@ struct SettingsView: View {
                                 )
 
                             HStack {
-                                Picker("Default model", selection: $viewModel.selectedModel) {
-                                    ForEach(viewModel.parsedModels, id: \.self) { model in
-                                        Text(model).tag(model)
-                                    }
-                                }
-                                .frame(maxWidth: 360)
+                                Text("Default model")
+                                    .frame(width: 96, alignment: .leading)
+
+                                ModelPickerView(selectedModel: $viewModel.selectedModel, models: viewModel.parsedModels)
+                                    .frame(maxWidth: 360)
 
                                 Spacer()
 

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://openrouter.ai"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CommandNest</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="app" class="shell">
+      <header class="titlebar">
+        <div class="brand">CommandNest</div>
+        <div class="header-actions">
+          <div id="modelPicker" class="model-picker"></div>
+          <button id="copyButton" class="icon-button" title="Copy full assistant response">Copy</button>
+          <button id="clearButton" class="icon-button" title="Clear conversation">Clear</button>
+          <button id="settingsButton" class="icon-button" title="Settings">Settings</button>
+          <button id="closeButton" class="icon-button" title="Close">Close</button>
+        </div>
+      </header>
+
+      <section id="assistantView" class="view active">
+        <div id="conversation" class="conversation"></div>
+        <div id="activity" class="activity hidden"></div>
+        <textarea id="prompt" class="prompt" placeholder="Ask CommandNest..."></textarea>
+        <footer class="footer">
+          <div id="status" class="status">Enter sends. Shift + Enter adds a line.</div>
+          <button id="sendButton" class="primary-button">Send</button>
+        </footer>
+      </section>
+
+      <section id="settingsView" class="view settings-view">
+        <div class="settings-scroll">
+          <h1>Settings</h1>
+
+          <label class="field">
+            <span>OpenRouter API key</span>
+            <input id="apiKey" type="password" autocomplete="off" placeholder="OpenRouter API key" />
+            <small id="secureStorageNote">Stored with OS secure storage.</small>
+          </label>
+
+          <label class="field">
+            <span>Models</span>
+            <textarea id="modelList" class="model-list"></textarea>
+          </label>
+
+          <label class="field">
+            <span>Default model</span>
+            <div id="settingsModelPicker" class="model-picker wide"></div>
+          </label>
+
+          <label class="field">
+            <span>System prompt</span>
+            <textarea id="systemPrompt" class="system-prompt"></textarea>
+          </label>
+
+          <div class="setting-row">
+            <label><input id="agentMode" type="checkbox" /> Enable local agent mode</label>
+          </div>
+          <div class="setting-row">
+            <label><input id="confirmActions" type="checkbox" /> Ask before local file, app, or shell actions</label>
+          </div>
+          <div class="setting-row">
+            <label><input id="launchAtLogin" type="checkbox" /> Launch CommandNest at login</label>
+          </div>
+
+          <label class="field">
+            <span>Global shortcut</span>
+            <input id="shortcut" type="text" placeholder="Alt+Space" />
+            <small>Use Electron accelerator syntax, for example Alt+Space or Control+Shift+K.</small>
+          </label>
+        </div>
+
+        <footer class="footer">
+          <div id="settingsStatus" class="status"></div>
+          <button id="refreshModelsButton" class="secondary-button">Load All Models</button>
+          <button id="saveSettingsButton" class="primary-button">Save Settings</button>
+        </footer>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

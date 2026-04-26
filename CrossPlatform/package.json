@@ -1,0 +1,19 @@
+{
+  "name": "commandnest-desktop",
+  "version": "1.2.0",
+  "description": "Cross-platform CommandNest desktop assistant for Windows and Linux.",
+  "main": "src/main.js",
+  "private": true,
+  "author": "CommandNest contributors",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "package:linux": "electron-packager . CommandNest --platform=linux --arch=x64,arm64 --out=dist --overwrite --ignore='^/dist$'",
+    "package:windows": "electron-packager . CommandNest --platform=win32 --arch=x64,arm64 --out=dist --overwrite --ignore='^/dist$'",
+    "package:all": "npm run package:linux && npm run package:windows"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.0.0",
+    "electron": "41.3.0"
+  }
+}

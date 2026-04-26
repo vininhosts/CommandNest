@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+- Added Markdown rendering for assistant responses to avoid raw formatting markers in chat.
+- Separated model reasoning and `<think>...</think>` output into a collapsible Thinking panel.
+- Added searchable model pickers in the assistant window and Settings.
+- Added an Electron-based Windows/Linux edition under `CrossPlatform/`.
+- Added GitHub Actions packaging for Windows and Linux release bundles.
+- Added tests for reasoning/thinking parsing.
+
 ## 1.1.0
 
 - Switched the app and test bundle identifiers to `io.github.vininhosts.CommandNest`.

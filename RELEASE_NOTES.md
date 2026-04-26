@@ -1,25 +1,24 @@
-# CommandNest 1.1.0
+# CommandNest 1.2.0
 
-Production-readiness release with safer local agent behavior and a stable app identity.
-
-CommandNest is a native macOS menu bar AI assistant with a global `Option + Space` command palette, OpenRouter streaming responses, secure Keychain API key storage, and local agent actions for files, folders, shell commands, and app/URL opening.
+UI polish and cross-platform expansion release.
 
 ## Download
 
-Download `CommandNest-1.1.0-3.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder.
+macOS: download `CommandNest-1.2.0-4.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder.
+
+Windows/Linux: download the matching `CommandNest-win32-*.zip` or `CommandNest-linux-*.tar.gz` asset from this release.
 
 ## Highlights
 
-- Stable bundle ID: `io.github.vininhosts.CommandNest`.
-- Public OpenRouter referer: `https://github.com/vininhosts/CommandNest`.
-- First-launch onboarding.
-- Menu bar update checker for GitHub Releases.
-- Launch at login toggle backed by macOS Login Items.
-- Confirmation prompts for local writes, moves, Trash, app/URL opens, shell commands, and native file organization.
-- Compact local-agent activity log in the assistant window.
+- Markdown rendering for assistant responses, so `**bold**` and code formatting render cleanly.
+- Collapsible Thinking panel for provider reasoning and `<think>...</think>` output, keeping the final answer clean.
+- Searchable model picker in both the assistant window and Settings.
+- Windows/Linux Electron edition with tray menu, global `Alt+Space`, OpenRouter streaming, secure API key storage, launch at login, and local agent tools.
+- GitHub Actions packaging for Windows and Linux release assets.
+- Additional tests for reasoning/thinking parsing.
 
-This first release is ad-hoc signed unless a maintainer builds it with a Developer ID certificate. macOS may require right-clicking the app and choosing `Open` the first time.
+macOS release builds are ad-hoc signed unless a maintainer builds them with a Developer ID certificate. Windows/Linux bundles are not code signed yet.
 
 ## Permissions
 
-The global hotkey normally needs no Accessibility permission. macOS may ask for Desktop, Documents, Downloads, external drive, network volume, or Full Disk Access permission when you ask CommandNest to inspect or organize protected locations.
+The global hotkey normally needs no Accessibility permission. Local agent actions can only access files and shell capabilities available to your OS user, and write/shell/open actions show confirmation prompts when enabled.

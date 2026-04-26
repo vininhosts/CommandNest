@@ -169,12 +169,23 @@ final class AssistantViewModel: ObservableObject {
         }
 
         var receivedStreamingChunk = false
+        var streamParser = ReasoningTextParser()
 
         do {
             for try await chunk in client.streamChat(apiKey: apiKey, model: selectedModel, messages: requestMessages) {
                 receivedStreamingChunk = true
-                append(chunk, toAssistantMessage: assistantID)
+                if !chunk.reasoning.isEmpty {
+                    appendReasoning(chunk.reasoning, toAssistantMessage: assistantID)
+                }
+
+                let parsed = streamParser.consume(chunk.content)
+                append(parsed.answer, toAssistantMessage: assistantID)
+                appendReasoning(parsed.reasoning, toAssistantMessage: assistantID)
             }
+
+            let tail = streamParser.finish()
+            append(tail.answer, toAssistantMessage: assistantID)
+            appendReasoning(tail.reasoning, toAssistantMessage: assistantID)
 
             if !receivedStreamingChunk {
                 let fullResponse = try await client.completeChat(apiKey: apiKey, model: selectedModel, messages: requestMessages)
@@ -182,6 +193,9 @@ final class AssistantViewModel: ObservableObject {
             }
         } catch {
             if receivedStreamingChunk {
+                let tail = streamParser.finish()
+                append(tail.answer, toAssistantMessage: assistantID)
+                appendReasoning(tail.reasoning, toAssistantMessage: assistantID)
                 errorMessage = "\(error.localizedDescription) Partial response was preserved."
             } else {
                 do {
@@ -220,12 +234,38 @@ final class AssistantViewModel: ObservableObject {
         messages[index].content += chunk
     }
 
+    private func appendReasoning(_ reasoning: String, toAssistantMessage id: UUID) {
+        guard !reasoning.isEmpty,
+              let index = messages.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+
+        if messages[index].reasoning.isEmpty {
+            messages[index].reasoning = reasoning
+        } else {
+            messages[index].reasoning += reasoning
+        }
+    }
+
     private func replaceAssistantMessage(_ id: UUID, with content: String) {
+        let parsed = ReasoningTextParser.separate(answer: content)
+        let answer = parsed.answer.isEmpty && parsed.reasoning.isEmpty ? content : parsed.answer
+        replaceAssistantMessage(id, with: answer, reasoning: parsed.reasoning)
+    }
+
+    private func replaceAssistantMessage(_ id: UUID, with result: OpenRouterChatResult) {
+        let parsed = ReasoningTextParser.separate(answer: result.content, explicitReasoning: result.reasoning)
+        let answer = parsed.answer.isEmpty && parsed.reasoning.isEmpty ? result.content : parsed.answer
+        replaceAssistantMessage(id, with: answer, reasoning: parsed.reasoning)
+    }
+
+    private func replaceAssistantMessage(_ id: UUID, with content: String, reasoning: String) {
         guard let index = messages.firstIndex(where: { $0.id == id }) else {
             return
         }
 
         messages[index].content = content
+        messages[index].reasoning = reasoning
     }
 
     private func removeEmptyAssistantMessage(_ id: UUID) {

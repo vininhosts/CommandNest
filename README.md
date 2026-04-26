@@ -1,6 +1,6 @@
 # CommandNest
 
-CommandNest is a lightweight native macOS menu bar assistant. Press `Option + Space`, type a prompt, and get a streamed OpenRouter response in a floating command palette. When a request is clearly local, CommandNest can also act on your Mac: organize files, create files, inspect folders, run shell commands, and open items.
+CommandNest is a lightweight desktop AI assistant. The primary app is a native macOS menu bar assistant: press `Option + Space`, type a prompt, and get a streamed OpenRouter response in a floating command palette. When a request is clearly local, CommandNest can also act on your Mac: organize files, create files, inspect folders, run shell commands, and open items. A Windows/Linux Electron edition lives in `CrossPlatform/`.
 
 ## Features
 
@@ -11,6 +11,9 @@ CommandNest is a lightweight native macOS menu bar assistant. Press `Option + Sp
 - Non-streaming fallback if streaming fails before any output arrives
 - OpenRouter model catalog loading from `/api/v1/models`
 - Free Models Router default model: `openrouter/free`
+- Searchable model picker in the assistant and Settings
+- Markdown response rendering, so formatted answers do not show raw `**` markers
+- Collapsible Thinking panel for provider reasoning and `<think>...</think>` output
 - API key stored in macOS Keychain
 - In-memory conversation with editable system prompt
 - Menu bar app behavior using `LSUIElement`
@@ -40,6 +43,28 @@ Scripts/package_release.sh
 ```
 
 Public release builds are ad-hoc signed unless a maintainer builds with a Developer ID certificate. See [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) for signing and notarization notes.
+
+## Windows and Linux
+
+The `CrossPlatform/` folder contains an Electron edition for Windows and Linux with the same core behavior: tray app, global `Alt+Space` shortcut, floating assistant palette, secure API key storage with OS secure storage, streamed OpenRouter responses, searchable models, Thinking panel, launch at login, and local agent tools.
+
+Run it locally:
+
+```sh
+cd CrossPlatform
+npm ci
+npm start
+```
+
+Package target builds:
+
+```sh
+cd CrossPlatform
+npm run package:windows
+npm run package:linux
+```
+
+GitHub Actions builds Windows bundles on Windows runners and Linux bundles on Ubuntu runners. Those archives are uploaded to tagged releases.
 
 ## Build and Run
 
@@ -102,7 +127,7 @@ CommandNest also loads the current OpenRouter model catalog from:
 https://openrouter.ai/api/v1/models
 ```
 
-The Settings window has a `Load All` button to refresh the editable model list. On launch, the app also refreshes the model list in the background.
+The Settings window has a `Load All` button to refresh the editable model list. On launch, the app also refreshes the model list in the background. Model pickers are searchable, so large OpenRouter model lists do not require scrolling from the top.
 
 Bundled fallback models:
 
@@ -167,7 +192,7 @@ Enable `Launch CommandNest at login` in Settings to register the app with macOS 
 xcodebuild -project CommandNest.xcodeproj -scheme CommandNest -configuration Debug -destination 'platform=macOS' test
 ```
 
-The current test target covers settings migrations, model normalization, local file creation, folder organization, manifest writing, conflict-safe moves, skipped incomplete downloads, and undoing organization from a manifest.
+The current test target covers settings migrations, model normalization, local file creation, folder organization, manifest writing, conflict-safe moves, skipped incomplete downloads, undoing organization from a manifest, agent safety checks, update comparisons, and reasoning/thinking parsing.
 
 ## Open Source
 
@@ -192,7 +217,9 @@ CommandNest/
 │   ├── HotKeyService.swift
 │   ├── AgentService.swift
 │   ├── LocalActionService.swift
-│   └── PermissionService.swift
+│   ├── PermissionService.swift
+│   ├── UpdateService.swift
+│   └── LaunchAtLoginService.swift
 ├── ViewModels/
 │   ├── AssistantViewModel.swift
 │   └── SettingsViewModel.swift
@@ -203,10 +230,16 @@ CommandNest/
 │   └── ModelPickerView.swift
 └── Utilities/
     ├── ClipboardHelper.swift
-    └── Constants.swift
+    ├── Constants.swift
+    └── ReasoningTextParser.swift
 CommandNestTests/
 ├── AppSettingsTests.swift
 └── LocalActionServiceTests.swift
+CrossPlatform/
+├── package.json
+├── src/main.js
+├── src/preload.js
+└── src/renderer/
 ```
 
 ## Info.plist and Entitlements

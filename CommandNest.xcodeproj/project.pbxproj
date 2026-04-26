@@ -28,10 +28,12 @@
 		000000000000000000000220 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000120 /* OnboardingView.swift */; };
 		000000000000000000000214 /* ClipboardHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000114 /* ClipboardHelper.swift */; };
 		000000000000000000000215 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000115 /* Constants.swift */; };
+		000000000000000000000222 /* ReasoningTextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000127 /* ReasoningTextParser.swift */; };
 		000000000000000000000301 /* LocalActionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000122 /* LocalActionServiceTests.swift */; };
 		000000000000000000000302 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000123 /* AppSettingsTests.swift */; };
 		000000000000000000000303 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000125 /* UpdateServiceTests.swift */; };
 		000000000000000000000304 /* AgentSafetyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000126 /* AgentSafetyTests.swift */; };
+		000000000000000000000305 /* ReasoningTextParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000128 /* ReasoningTextParserTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,10 +77,12 @@
 		000000000000000000000120 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		000000000000000000000114 /* ClipboardHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHelper.swift; sourceTree = "<group>"; };
 		000000000000000000000115 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		000000000000000000000127 /* ReasoningTextParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningTextParser.swift; sourceTree = "<group>"; };
 		000000000000000000000122 /* LocalActionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalActionServiceTests.swift; sourceTree = "<group>"; };
 		000000000000000000000123 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
 		000000000000000000000125 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
 		000000000000000000000126 /* AgentSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSafetyTests.swift; sourceTree = "<group>"; };
+		000000000000000000000128 /* ReasoningTextParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningTextParserTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +192,7 @@
 			children = (
 				000000000000000000000114 /* ClipboardHelper.swift */,
 				000000000000000000000115 /* Constants.swift */,
+				000000000000000000000127 /* ReasoningTextParser.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -199,6 +204,7 @@
 				000000000000000000000123 /* AppSettingsTests.swift */,
 				000000000000000000000125 /* UpdateServiceTests.swift */,
 				000000000000000000000126 /* AgentSafetyTests.swift */,
+				000000000000000000000128 /* ReasoningTextParserTests.swift */,
 			);
 			path = CommandNestTests;
 			sourceTree = "<group>";
@@ -322,6 +328,7 @@
 				000000000000000000000220 /* OnboardingView.swift in Sources */,
 				000000000000000000000214 /* ClipboardHelper.swift in Sources */,
 				000000000000000000000215 /* Constants.swift in Sources */,
+				000000000000000000000222 /* ReasoningTextParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,6 +340,7 @@
 				000000000000000000000302 /* AppSettingsTests.swift in Sources */,
 				000000000000000000000303 /* UpdateServiceTests.swift in Sources */,
 				000000000000000000000304 /* AgentSafetyTests.swift in Sources */,
+				000000000000000000000305 /* ReasoningTextParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
