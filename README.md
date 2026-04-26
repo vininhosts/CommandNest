@@ -16,7 +16,7 @@ CommandNest is a lightweight native macOS menu bar assistant. Press `Option + Sp
 - Menu bar app behavior using `LSUIElement`
 - Local Agent Mode with filesystem, shell, and open-item tools
 - Native local actions for organizing folders, undoing organization, and creating text files
-- Settings for API key, model list, selected model, system prompt, agent access, and shortcut recording
+- Settings for API key, model list, selected model, system prompt, agent access, launch at login, and shortcut recording
 
 ## Download Without Xcode
 
@@ -156,6 +156,10 @@ CommandNest cannot grant these permissions to itself. Use the buttons in Setting
 ## Updates
 
 Use the menu bar item `Check for Updates...` to compare the installed version with the latest GitHub Release. This opens the release page when a newer build is available. Full automatic installation is intentionally left for a future Sparkle integration once signing and notarization are configured.
+
+## Launch at Login
+
+Enable `Launch CommandNest at login` in Settings to register the app with macOS Login Items using `SMAppService`. macOS may show CommandNest in System Settings under `General > Login Items & Extensions`.
 
 ## Tests
 

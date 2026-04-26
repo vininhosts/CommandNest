@@ -130,6 +130,9 @@ struct SettingsView: View {
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
+
+                            Toggle("Launch CommandNest at login", isOn: $viewModel.launchAtLoginEnabled)
+                                .toggleStyle(.checkbox)
                         }
                         .padding(.vertical, 4)
                     }

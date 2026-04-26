@@ -18,6 +18,7 @@
 		000000000000000000000217 /* PermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000117 /* PermissionService.swift */; };
 		000000000000000000000218 /* LocalActionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000118 /* LocalActionService.swift */; };
 		000000000000000000000219 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000119 /* UpdateService.swift */; };
+		000000000000000000000221 /* LaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000121 /* LaunchAtLoginService.swift */; };
 		000000000000000000000208 /* AssistantViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000108 /* AssistantViewModel.swift */; };
 		000000000000000000000209 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000109 /* SettingsViewModel.swift */; };
 		000000000000000000000210 /* AssistantWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000110 /* AssistantWindowView.swift */; };
@@ -64,6 +65,7 @@
 		000000000000000000000117 /* PermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionService.swift; sourceTree = "<group>"; };
 		000000000000000000000118 /* LocalActionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalActionService.swift; sourceTree = "<group>"; };
 		000000000000000000000119 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
+		000000000000000000000121 /* LaunchAtLoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginService.swift; sourceTree = "<group>"; };
 		000000000000000000000108 /* AssistantViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000109 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000110 /* AssistantWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantWindowView.swift; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 				000000000000000000000118 /* LocalActionService.swift */,
 				000000000000000000000117 /* PermissionService.swift */,
 				000000000000000000000119 /* UpdateService.swift */,
+				000000000000000000000121 /* LaunchAtLoginService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -309,6 +312,7 @@
 				000000000000000000000218 /* LocalActionService.swift in Sources */,
 				000000000000000000000217 /* PermissionService.swift in Sources */,
 				000000000000000000000219 /* UpdateService.swift in Sources */,
+				000000000000000000000221 /* LaunchAtLoginService.swift in Sources */,
 				000000000000000000000208 /* AssistantViewModel.swift in Sources */,
 				000000000000000000000209 /* SettingsViewModel.swift in Sources */,
 				000000000000000000000210 /* AssistantWindowView.swift in Sources */,

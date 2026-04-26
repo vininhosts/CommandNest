@@ -8,6 +8,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var shortcut: GlobalKeyboardShortcut
     @Published var agentModeEnabled: Bool
     @Published var confirmAgentActions: Bool
+    @Published var launchAtLoginEnabled: Bool
     @Published var isRefreshingModels = false
     @Published var statusMessage: String?
     @Published var errorMessage: String?
@@ -27,6 +28,7 @@ final class SettingsViewModel: ObservableObject {
         self.shortcut = settings.shortcut
         self.agentModeEnabled = settings.agentModeEnabled
         self.confirmAgentActions = settings.confirmAgentActions
+        self.launchAtLoginEnabled = LaunchAtLoginService.isEnabled
     }
 
     var parsedModels: [String] {
@@ -54,6 +56,7 @@ final class SettingsViewModel: ObservableObject {
 
         do {
             try keychain.saveAPIKey(apiKey)
+            try LaunchAtLoginService.setEnabled(launchAtLoginEnabled)
             settings.save()
             statusMessage = "Settings saved."
         } catch {

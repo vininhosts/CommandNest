@@ -14,6 +14,7 @@ Download `CommandNest-1.1.0-3.zip`, unzip it, move `CommandNest.app` to `/Applic
 - Public OpenRouter referer: `https://github.com/vininhosts/CommandNest`.
 - First-launch onboarding.
 - Menu bar update checker for GitHub Releases.
+- Launch at login toggle backed by macOS Login Items.
 - Confirmation prompts for local writes, moves, Trash, app/URL opens, shell commands, and native file organization.
 - Compact local-agent activity log in the assistant window.
 

@@ -5,6 +5,7 @@
 - Switched the app and test bundle identifiers to `io.github.vininhosts.CommandNest`.
 - Updated the OpenRouter `HTTP-Referer` header to the public GitHub repository.
 - Added first-launch onboarding and a menu bar update checker for GitHub Releases.
+- Added a Settings toggle to launch CommandNest automatically at login.
 - Added confirmation prompts and activity logging for local agent file, app, and shell actions.
 - Added tests for action confirmation, shell-command safety, and version comparison.
 
