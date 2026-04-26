@@ -7,6 +7,7 @@
 - Added searchable model pickers in the assistant window and Settings.
 - Added an Electron-based Windows/Linux edition under `CrossPlatform/`.
 - Added GitHub Actions packaging for Windows and Linux release bundles.
+- Added stable latest release asset names, installer scripts, and a GitHub Pages landing page.
 - Added tests for reasoning/thinking parsing.
 
 ## 1.1.0

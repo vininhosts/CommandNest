@@ -17,6 +17,8 @@ APP_SOURCE="$DERIVED_DATA/Build/Products/Release/CommandNest.app"
 APP_STAGED="$STAGING/CommandNest.app"
 ZIP_PATH="$DIST/${ARCHIVE_NAME}.zip"
 CHECKSUM_PATH="$DIST/${ARCHIVE_NAME}.sha256"
+LATEST_ZIP_PATH="$DIST/CommandNest-macOS.zip"
+LATEST_CHECKSUM_PATH="$DIST/CommandNest-macOS.sha256"
 
 echo "Building CommandNest ${VERSION} (${BUILD_NUMBER})..."
 xcodebuild \
@@ -33,7 +35,7 @@ if [[ ! -d "$APP_SOURCE" ]]; then
 fi
 
 mkdir -p "$DIST"
-rm -rf "$STAGING" "$ZIP_PATH" "$CHECKSUM_PATH"
+rm -rf "$STAGING" "$ZIP_PATH" "$CHECKSUM_PATH" "$LATEST_ZIP_PATH" "$LATEST_CHECKSUM_PATH"
 mkdir -p "$STAGING"
 ditto --norsrc "$APP_SOURCE" "$APP_STAGED"
 
@@ -47,12 +49,16 @@ fi
 
 codesign --verify --deep --strict "$APP_STAGED"
 ditto -c -k --keepParent --norsrc "$APP_STAGED" "$ZIP_PATH"
+cp "$ZIP_PATH" "$LATEST_ZIP_PATH"
 
 (
   cd "$DIST"
   shasum -a 256 "$(basename "$ZIP_PATH")" > "$(basename "$CHECKSUM_PATH")"
+  shasum -a 256 "$(basename "$LATEST_ZIP_PATH")" > "$(basename "$LATEST_CHECKSUM_PATH")"
 )
 
 echo "Created:"
 echo "  $ZIP_PATH"
 echo "  $CHECKSUM_PATH"
+echo "  $LATEST_ZIP_PATH"
+echo "  $LATEST_CHECKSUM_PATH"

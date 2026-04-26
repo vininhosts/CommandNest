@@ -1,6 +1,14 @@
 # CommandNest
 
+[![Latest release](https://img.shields.io/github/v/release/vininhosts/CommandNest?style=flat-square)](https://github.com/vininhosts/CommandNest/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/vininhosts/CommandNest/total?style=flat-square)](https://github.com/vininhosts/CommandNest/releases)
+[![macOS CI](https://img.shields.io/github/actions/workflow/status/vininhosts/CommandNest/ci.yml?branch=main&label=macOS%20CI&style=flat-square)](https://github.com/vininhosts/CommandNest/actions/workflows/ci.yml)
+[![Windows/Linux](https://img.shields.io/github/actions/workflow/status/vininhosts/CommandNest/cross-platform.yml?branch=main&label=Windows%20%2F%20Linux&style=flat-square)](https://github.com/vininhosts/CommandNest/actions/workflows/cross-platform.yml)
+[![License](https://img.shields.io/github/license/vininhosts/CommandNest?style=flat-square)](LICENSE)
+
 CommandNest is a lightweight desktop AI assistant. The primary app is a native macOS menu bar assistant: press `Option + Space`, type a prompt, and get a streamed OpenRouter response in a floating command palette. When a request is clearly local, CommandNest can also act on your Mac: organize files, create files, inspect folders, run shell commands, and open items. A Windows/Linux Electron edition lives in `CrossPlatform/`.
+
+Website: [vininhosts.github.io/CommandNest](https://vininhosts.github.io/CommandNest/)
 
 ## Features
 
@@ -23,13 +31,19 @@ CommandNest is a lightweight desktop AI assistant. The primary app is a native m
 
 ## Download Without Xcode
 
-Download the latest `CommandNest-<version>-<build>.zip` from GitHub Releases:
+Download the latest release from GitHub:
 
 ```text
-https://github.com/vininhosts/CommandNest/releases
+https://github.com/vininhosts/CommandNest/releases/latest
 ```
 
-Then:
+Quick install:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/vininhosts/CommandNest/main/Scripts/install-macos.sh | bash
+```
+
+Manual install:
 
 1. Unzip the file.
 2. Move `CommandNest.app` to `/Applications`.
@@ -47,6 +61,18 @@ Public release builds are ad-hoc signed unless a maintainer builds with a Develo
 ## Windows and Linux
 
 The `CrossPlatform/` folder contains an Electron edition for Windows and Linux with the same core behavior: tray app, global `Alt+Space` shortcut, floating assistant palette, secure API key storage with OS secure storage, streamed OpenRouter responses, searchable models, Thinking panel, launch at login, and local agent tools.
+
+Install on Linux:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/vininhosts/CommandNest/main/Scripts/install-linux.sh | bash
+```
+
+Install on Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/vininhosts/CommandNest/main/Scripts/install-windows.ps1 | iex
+```
 
 Run it locally:
 

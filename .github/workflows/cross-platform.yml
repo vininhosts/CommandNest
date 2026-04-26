@@ -50,6 +50,8 @@ jobs:
         run: |
           tar -czf dist/CommandNest-linux-x64.tar.gz -C dist CommandNest-linux-x64
           tar -czf dist/CommandNest-linux-arm64.tar.gz -C dist CommandNest-linux-arm64
+          sha256sum dist/CommandNest-linux-x64.tar.gz | sed 's#dist/##' > dist/CommandNest-linux-x64.sha256
+          sha256sum dist/CommandNest-linux-arm64.tar.gz | sed 's#dist/##' > dist/CommandNest-linux-arm64.sha256
 
       - name: Archive Windows bundles
         if: runner.os == 'Windows'
@@ -57,6 +59,10 @@ jobs:
         run: |
           Compress-Archive -Path dist/CommandNest-win32-x64 -DestinationPath dist/CommandNest-win32-x64.zip -Force
           Compress-Archive -Path dist/CommandNest-win32-arm64 -DestinationPath dist/CommandNest-win32-arm64.zip -Force
+          $x64 = Get-FileHash -Algorithm SHA256 dist/CommandNest-win32-x64.zip
+          "$($x64.Hash.ToLower())  CommandNest-win32-x64.zip" | Set-Content dist/CommandNest-win32-x64.sha256
+          $arm64 = Get-FileHash -Algorithm SHA256 dist/CommandNest-win32-arm64.zip
+          "$($arm64.Hash.ToLower())  CommandNest-win32-arm64.zip" | Set-Content dist/CommandNest-win32-arm64.sha256
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
@@ -65,3 +71,4 @@ jobs:
           path: |
             CrossPlatform/dist/*.zip
             CrossPlatform/dist/*.tar.gz
+            CrossPlatform/dist/*.sha256

@@ -13,6 +13,8 @@ The script creates:
 ```text
 dist/CommandNest-<version>-<build>.zip
 dist/CommandNest-<version>-<build>.sha256
+dist/CommandNest-macOS.zip
+dist/CommandNest-macOS.sha256
 ```
 
 Without a `CODESIGN_IDENTITY`, the script applies an ad-hoc signature. This is enough for local testing, but macOS Gatekeeper may show a warning for downloaded builds.
@@ -56,5 +58,7 @@ CommandNest-win32-arm64.zip
 CommandNest-linux-x64.tar.gz
 CommandNest-linux-arm64.tar.gz
 ```
+
+Release workflows also upload matching `.sha256` files for installer verification.
 
 Windows/Linux bundles are not code signed yet. Add platform signing credentials before presenting them as fully trusted production downloads.
