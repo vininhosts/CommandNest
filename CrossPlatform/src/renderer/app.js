@@ -176,7 +176,8 @@ function lastAssistantResponse() {
 function renderConversation() {
   const messages = visibleMessages();
   if (!messages.length) {
-    dom.conversation.innerHTML = '<div class="empty"><div><strong>Ask anything</strong><br />Alt+Space opens this assistant from anywhere.</div></div>';
+    const shortcut = state.settings?.shortcut || state.settings?.defaultShortcut || 'Alt+Space';
+    dom.conversation.innerHTML = `<div class="empty"><div><strong>Ask anything</strong><br />${escapeHTML(shortcut)} opens this assistant from anywhere.</div></div>`;
     return;
   }
 
@@ -327,7 +328,8 @@ function syncSettingsForm() {
   dom.agentMode.checked = Boolean(state.settings.agentModeEnabled);
   dom.confirmActions.checked = Boolean(state.settings.confirmAgentActions);
   dom.launchAtLogin.checked = Boolean(state.settings.launchAtLogin);
-  dom.shortcut.value = state.settings.shortcut || 'Alt+Space';
+  dom.shortcut.placeholder = state.settings.defaultShortcut || 'Alt+Space';
+  dom.shortcut.value = state.settings.shortcut || state.settings.defaultShortcut || 'Alt+Space';
 }
 
 async function saveSettings() {

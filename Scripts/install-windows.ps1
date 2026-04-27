@@ -43,21 +43,36 @@ try {
     }
 
     Write-Host "Installing to $InstallDir..."
+    Get-Process -Name "CommandNest" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     if (Test-Path $InstallDir) {
         Remove-Item -Recurse -Force $InstallDir
     }
     Move-Item $ExtractedDir $InstallDir
 
     $ShortcutDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
+    New-Item -ItemType Directory -Force -Path $ShortcutDir | Out-Null
     $ShortcutPath = Join-Path $ShortcutDir "CommandNest.lnk"
+    $TargetPath = Join-Path $InstallDir "CommandNest.exe"
     $Shell = New-Object -ComObject WScript.Shell
     $Shortcut = $Shell.CreateShortcut($ShortcutPath)
-    $Shortcut.TargetPath = Join-Path $InstallDir "CommandNest.exe"
+    $Shortcut.TargetPath = $TargetPath
     $Shortcut.WorkingDirectory = $InstallDir
+    $Shortcut.IconLocation = "$TargetPath,0"
     $Shortcut.Save()
 
-    Start-Process (Join-Path $InstallDir "CommandNest.exe")
+    $DesktopPath = [Environment]::GetFolderPath("Desktop")
+    if ($DesktopPath) {
+        $DesktopShortcut = Join-Path $DesktopPath "CommandNest.lnk"
+        $DesktopLink = $Shell.CreateShortcut($DesktopShortcut)
+        $DesktopLink.TargetPath = $TargetPath
+        $DesktopLink.WorkingDirectory = $InstallDir
+        $DesktopLink.IconLocation = "$TargetPath,0"
+        $DesktopLink.Save()
+    }
+
+    Start-Process $TargetPath
     Write-Host "CommandNest installed and launched."
+    Write-Host "Open it with Ctrl+Shift+Space or from the CommandNest tray/taskbar icon."
 } finally {
     Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
 }

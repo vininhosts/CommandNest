@@ -20,7 +20,7 @@ CommandNest is a lightweight desktop AI assistant for people who want something 
 
 - macOS native Swift menu bar app
 - Windows/Linux Electron edition
-- Global shortcut: Option+Space on macOS, Alt+Space on Windows/Linux
+- Global shortcut: Option+Space on macOS, Ctrl+Shift+Space on Windows, Alt+Space on Linux
 - OpenRouter Chat Completions with streaming
 - Free router default model
 - Searchable model picker

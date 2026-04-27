@@ -22,7 +22,25 @@ const DEFAULT_MODELS = [
 
 let assistantWindow;
 let tray;
-let currentShortcut = 'Alt+Space';
+let isQuitting = false;
+let currentShortcut = defaultShortcut();
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!hasSingleInstanceLock) {
+  app.quit();
+}
+
+function defaultShortcut() {
+  return process.platform === 'win32' ? 'Control+Shift+Space' : 'Alt+Space';
+}
+
+function normalizeShortcut(shortcut) {
+  const value = String(shortcut || '').trim();
+  if (process.platform === 'win32' && (!value || value === 'Alt+Space')) {
+    return defaultShortcut();
+  }
+  return value || defaultShortcut();
+}
 
 function userDataPath(fileName) {
   return path.join(app.getPath('userData'), fileName);
@@ -33,7 +51,7 @@ function defaultSettings() {
     modelIDs: DEFAULT_MODELS,
     selectedModelID: FREE_ROUTER_MODEL,
     systemPrompt: DEFAULT_SYSTEM_PROMPT,
-    shortcut: 'Alt+Space',
+    shortcut: defaultShortcut(),
     agentModeEnabled: true,
     confirmAgentActions: true,
     launchAtLogin: isLaunchAtLoginEnabled()
@@ -63,6 +81,7 @@ function loadSettings() {
     if (!merged.modelIDs.includes(merged.selectedModelID)) {
       merged.selectedModelID = FREE_ROUTER_MODEL;
     }
+    merged.shortcut = normalizeShortcut(merged.shortcut);
     merged.launchAtLogin = isLaunchAtLoginEnabled();
     return merged;
   } catch {
@@ -76,7 +95,7 @@ function saveSettings(settings) {
     ...settings,
     modelIDs: normalizeModels(settings.modelIDs || DEFAULT_MODELS),
     systemPrompt: String(settings.systemPrompt || DEFAULT_SYSTEM_PROMPT).trim() || DEFAULT_SYSTEM_PROMPT,
-    shortcut: String(settings.shortcut || 'Alt+Space').trim() || 'Alt+Space'
+    shortcut: normalizeShortcut(settings.shortcut)
   };
 
   if (!normalized.modelIDs.includes(normalized.selectedModelID)) {
@@ -192,16 +211,18 @@ function createTrayIcon() {
 }
 
 function createWindow() {
+  const isWindows = process.platform === 'win32';
   assistantWindow = new BrowserWindow({
     width: 760,
     height: 600,
     minWidth: 680,
     minHeight: 520,
     show: false,
-    frame: false,
+    frame: isWindows,
+    autoHideMenuBar: true,
     alwaysOnTop: true,
-    skipTaskbar: true,
-    backgroundColor: '#00000000',
+    skipTaskbar: !isWindows,
+    backgroundColor: isWindows ? '#111827' : '#00000000',
     title: APP_NAME,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -212,26 +233,43 @@ function createWindow() {
   });
 
   assistantWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  assistantWindow.on('blur', () => {
-    if (!assistantWindow.webContents.isDevToolsOpened()) {
+  assistantWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
       assistantWindow.hide();
     }
+  });
+  if (!isWindows) {
+    assistantWindow.on('blur', () => {
+      if (!assistantWindow.webContents.isDevToolsOpened()) {
+        assistantWindow.hide();
+      }
+    });
+  }
+  assistantWindow.on('closed', () => {
+    assistantWindow = null;
   });
 }
 
 function showAssistant(route = 'assistant') {
-  if (!assistantWindow) {
+  if (!assistantWindow || assistantWindow.isDestroyed()) {
     createWindow();
   }
 
   assistantWindow.center();
   assistantWindow.show();
   assistantWindow.focus();
-  assistantWindow.webContents.send('app:navigate', route);
+  if (assistantWindow.webContents.isLoading()) {
+    assistantWindow.webContents.once('did-finish-load', () => {
+      assistantWindow?.webContents.send('app:navigate', route);
+    });
+  } else {
+    assistantWindow.webContents.send('app:navigate', route);
+  }
 }
 
 function toggleAssistant() {
-  if (!assistantWindow) {
+  if (!assistantWindow || assistantWindow.isDestroyed()) {
     createWindow();
   }
 
@@ -243,14 +281,24 @@ function toggleAssistant() {
 }
 
 function registerShortcut(shortcut) {
-  globalShortcut.unregister(currentShortcut);
-  const requested = shortcut || 'Alt+Space';
-  const ok = globalShortcut.register(requested, toggleAssistant);
-  currentShortcut = ok ? requested : 'Alt+Space';
-
-  if (!ok && requested !== 'Alt+Space') {
-    globalShortcut.register('Alt+Space', toggleAssistant);
+  if (currentShortcut) {
+    globalShortcut.unregister(currentShortcut);
   }
+
+  const requested = normalizeShortcut(shortcut);
+  const fallback = defaultShortcut();
+  const emergency = process.platform === 'win32' ? 'Control+Alt+Space' : 'Alt+Shift+Space';
+  const candidates = [...new Set([requested, fallback, emergency])];
+
+  for (const candidate of candidates) {
+    if (globalShortcut.register(candidate, toggleAssistant)) {
+      currentShortcut = candidate;
+      return candidate === requested;
+    }
+  }
+
+  currentShortcut = '';
+  return false;
 }
 
 function createMenu() {
@@ -283,6 +331,8 @@ function createMenu() {
 function settingsForRenderer(settings = loadSettings()) {
   return {
     ...settings,
+    platform: process.platform,
+    defaultShortcut: defaultShortcut(),
     apiKey: loadAPIKey() ? '********' : '',
     secureStorageAvailable: safeStorage.isEncryptionAvailable()
   };
@@ -648,7 +698,10 @@ function assertSafeShellCommand(command) {
     /mkfs\./,
     /diskutil\s+erase/,
     /format\s+[a-z]:/,
+    /format-volume/,
+    /clear-disk/,
     /del\s+\/[fqs].*c:\\/,
+    /remove-item\s+.*(-recurse|-r).*(-force|-fo).*c:\\/,
     /dd\s+.*of=\/dev\//
   ];
   if (blocked.some((pattern) => pattern.test(normalized))) {
@@ -770,9 +823,27 @@ function splitList(value) {
 
 function shellQuote(value) {
   if (process.platform === 'win32') {
-    return `"${String(value).replace(/"/g, '\\"')}"`;
+    return `"${String(value).replace(/([%^&|<>"])/g, '^$1')}"`;
   }
   return `'${String(value).replace(/'/g, "'\\''")}'`;
+}
+
+function platformExecutable(command) {
+  if (process.platform !== 'win32') {
+    return command;
+  }
+
+  const executable = String(command || '');
+  const lower = executable.toLowerCase();
+  if (/\.(cmd|bat|exe|ps1)$/.test(lower)) {
+    return executable;
+  }
+
+  if (['npm', 'npx', 'pnpm', 'yarn'].includes(lower)) {
+    return `${executable}.cmd`;
+  }
+
+  return executable;
 }
 
 function searchFiles(args) {
@@ -811,10 +882,66 @@ async function grepText(args) {
   const root = expandPath(args.root_path);
   const pattern = String(args.pattern || '');
   const maxResults = Math.min(Math.max(Number(args.max_results || 100), 1), 500);
-  const command = process.platform === 'win32'
-    ? `findstr /spin /c:${shellQuote(pattern)} *`
-    : `if command -v rg >/dev/null 2>&1; then rg -n --hidden --glob '!.git/**' --glob '!node_modules/**' --glob '!dist/**' --glob '!build/**' ${shellQuote(pattern)} ${shellQuote(root)} | head -n ${maxResults}; else grep -RIn --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build ${shellQuote(pattern)} ${shellQuote(root)} | head -n ${maxResults}; fi`;
+  if (process.platform === 'win32') {
+    return grepTextInNode(root, pattern, maxResults);
+  }
+
+  const command = `if command -v rg >/dev/null 2>&1; then rg -n --hidden --glob '!.git/**' --glob '!node_modules/**' --glob '!dist/**' --glob '!build/**' ${shellQuote(pattern)} ${shellQuote(root)} | head -n ${maxResults}; else grep -RIn --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build ${shellQuote(pattern)} ${shellQuote(root)} | head -n ${maxResults}; fi`;
   return await runShellCommand(command, root, Number(args.timeout_seconds || 30));
+}
+
+function grepTextInNode(root, pattern, maxResults) {
+  if (!pattern) {
+    throw new Error('grep_text requires a non-empty pattern.');
+  }
+
+  const skip = new Set(['.git', 'node_modules', 'dist', 'build', 'DerivedData', '.build']);
+  const needle = pattern.toLowerCase();
+  const results = [];
+
+  function walk(current) {
+    if (results.length >= maxResults) {
+      return;
+    }
+
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (results.length >= maxResults || skip.has(entry.name)) {
+        continue;
+      }
+
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+        continue;
+      }
+
+      if (!entry.isFile()) {
+        continue;
+      }
+
+      const stat = fs.statSync(fullPath);
+      if (stat.size > 2_000_000) {
+        continue;
+      }
+
+      let text;
+      try {
+        text = fs.readFileSync(fullPath, 'utf8');
+      } catch {
+        continue;
+      }
+
+      const lines = text.split(/\r?\n/);
+      for (let index = 0; index < lines.length && results.length < maxResults; index += 1) {
+        if (lines[index].toLowerCase().includes(needle)) {
+          results.push(`${fullPath}:${index + 1}:${lines[index]}`);
+        }
+      }
+    }
+  }
+
+  walk(root);
+  return results.join('\n') || 'No matches found.';
 }
 
 function replaceInTextFile(args) {
@@ -1031,7 +1158,7 @@ class MCPStdioClient {
   }
 
   async start() {
-    this.process = spawn(this.config.command, this.config.args || [], {
+    this.process = spawn(platformExecutable(this.config.command), this.config.args || [], {
       env: { ...process.env, ...(this.config.env || {}) },
       shell: false,
       windowsHide: true
@@ -1173,11 +1300,21 @@ ipcMain.handle('assistant:send', async (event, payload) => {
   return { ok: true };
 });
 
-app.whenReady().then(() => {
-  app.setAppUserModelId(APP_ID);
-  createWindow();
-  createMenu();
-  registerShortcut(loadSettings().shortcut);
+if (hasSingleInstanceLock) {
+  app.whenReady().then(() => {
+    app.setAppUserModelId(APP_ID);
+    createWindow();
+    createMenu();
+    registerShortcut(loadSettings().shortcut);
+  });
+}
+
+app.on('second-instance', () => {
+  showAssistant('assistant');
+});
+
+app.on('before-quit', () => {
+  isQuitting = true;
 });
 
 app.on('will-quit', () => {

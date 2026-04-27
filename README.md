@@ -6,7 +6,7 @@
 [![Windows/Linux](https://img.shields.io/github/actions/workflow/status/vininhosts/CommandNest/cross-platform.yml?branch=main&label=Windows%20%2F%20Linux&style=flat-square)](https://github.com/vininhosts/CommandNest/actions/workflows/cross-platform.yml)
 [![License](https://img.shields.io/github/license/vininhosts/CommandNest?style=flat-square)](LICENSE)
 
-CommandNest is a lightweight desktop AI assistant. The primary app is a native macOS menu bar assistant: press `Option + Space`, type a prompt, and get a streamed OpenRouter response in a floating command palette. When a request is clearly local, CommandNest can also act on your Mac: organize files, create and edit code, run tests, control browsers, prepare or send email, use git/GitHub, run shell commands, and call MCP servers. A Windows/Linux Electron edition lives in `CrossPlatform/`.
+CommandNest is a lightweight desktop AI assistant. The primary app is a native macOS menu bar assistant: press `Option + Space`, type a prompt, and get a streamed OpenRouter response in a floating command palette. When a request is clearly local, CommandNest can also act on your computer: organize files, create and edit code, run tests, control browsers, prepare or send email, use git/GitHub, run shell commands, and call MCP servers. A Windows/Linux Electron edition lives in `CrossPlatform/`.
 
 Website: [vininhosts.github.io/CommandNest](https://vininhosts.github.io/CommandNest/)
 
@@ -60,7 +60,7 @@ Public release builds are ad-hoc signed unless a maintainer builds with a Develo
 
 ## Windows and Linux
 
-The `CrossPlatform/` folder contains an Electron edition for Windows and Linux with the same core behavior: tray app, global `Alt+Space` shortcut, floating assistant palette, secure API key storage with OS secure storage, streamed OpenRouter responses, searchable models, Thinking panel, launch at login, and local agent tools.
+The `CrossPlatform/` folder contains an Electron edition for Windows and Linux with the same core behavior: tray app, floating assistant palette, secure API key storage with OS secure storage, streamed OpenRouter responses, searchable models, Thinking panel, launch at login, and local agent tools. The default shortcut is `Ctrl+Shift+Space` on Windows because `Alt+Space` is reserved by Windows; Linux uses `Alt+Space`.
 
 Install on Linux:
 
@@ -73,6 +73,8 @@ Install on Windows PowerShell:
 ```powershell
 irm https://raw.githubusercontent.com/vininhosts/CommandNest/main/Scripts/install-windows.ps1 | iex
 ```
+
+After installing on Windows, open CommandNest from the desktop shortcut, Start menu, tray icon, or `Ctrl+Shift+Space`.
 
 Run it locally:
 

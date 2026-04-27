@@ -4,7 +4,7 @@ This is the Windows and Linux edition of CommandNest. It uses Electron so the gl
 
 ## Features
 
-- Global shortcut, default `Alt+Space`
+- Global shortcut, default `Ctrl+Shift+Space` on Windows and `Alt+Space` on Linux
 - Tray menu with Show Assistant, Settings, Launch at Login, and Quit
 - Floating command palette with streamed OpenRouter responses
 - Searchable model picker
@@ -21,6 +21,8 @@ cd CrossPlatform
 npm ci
 npm start
 ```
+
+On Windows, open CommandNest from the taskbar/tray or press `Ctrl+Shift+Space`. `Alt+Space` is intentionally avoided on Windows because the OS reserves it for the window system menu.
 
 ## Package
 

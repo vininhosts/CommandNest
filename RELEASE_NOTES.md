@@ -1,10 +1,10 @@
-# CommandNest 1.3.0
+# CommandNest 1.3.1
 
-Agent expansion release.
+Windows reliability release.
 
 ## Download
 
-macOS: download `CommandNest-macOS.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder. The versioned `CommandNest-1.3.0-5.zip` asset is also included for archival installs.
+macOS: download `CommandNest-macOS.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder. The versioned `CommandNest-1.3.1-6.zip` asset is also included for archival installs.
 
 Windows/Linux: download the matching `CommandNest-win32-*.zip` or `CommandNest-linux-*.tar.gz` asset from this release.
 
@@ -25,11 +25,11 @@ irm https://raw.githubusercontent.com/vininhosts/CommandNest/main/Scripts/instal
 
 ## Highlights
 
-- Expanded native macOS agent tools for code search/editing, project test runs, git/GitHub publishing, browser actions, email, and MCP stdio integrations.
-- Expanded Windows/Linux agent tools for code editing, test runs, git/GitHub publishing, browser/search actions, email drafts, and MCP stdio integrations.
-- Added built-in MCP presets for filesystem, GitHub, and Playwright browser servers, plus user-configurable `mcp.json` support.
-- Added safety coverage requiring confirmation for browser page reads/control, email sending, GitHub publishing, and external MCP tool calls.
-- Updated documentation, privacy notes, security guidance, and landing page copy for the expanded agent capabilities.
+- Reworked the Windows edition around native Windows behavior instead of Mac-style menu-bar assumptions.
+- Changed the Windows default global shortcut to `Ctrl+Shift+Space`; existing Windows installs that still have `Alt+Space` saved are migrated automatically.
+- Kept the Windows window visible in the taskbar and stopped auto-hiding it on blur, so Settings and the assistant no longer feel like they disappear.
+- Improved the Windows installer by stopping old running copies, creating Start menu and desktop shortcuts, launching the installed app, and printing the active shortcut.
+- Fixed Windows MCP startup for `npm`/`npx` based servers and replaced fragile `findstr` text search with a built-in Node search path.
 
 macOS release builds are ad-hoc signed unless a maintainer builds them with a Developer ID certificate. Windows/Linux bundles are not code signed yet.
 

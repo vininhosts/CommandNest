@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1
+
+- Reworked Windows defaults so the Electron app uses `Ctrl+Shift+Space` instead of the OS-reserved `Alt+Space`.
+- Kept the Windows assistant visible in the taskbar and stopped hiding it automatically on blur.
+- Improved Windows installer shortcuts and relaunch behavior.
+- Fixed Windows MCP startup for npm/npx-based servers and made text search avoid fragile `findstr` shell quoting.
+
 ## 1.3.0
 
 - Expanded local agent tools for coding workflows, project tests, git/GitHub publishing, browser actions, email, and MCP stdio integrations.
