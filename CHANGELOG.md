@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Expanded local agent tools for coding workflows, project tests, git/GitHub publishing, browser actions, email, and MCP stdio integrations.
+- Added safety coverage requiring confirmation for browser page reads/control, email sending, GitHub publishing, and MCP tool calls.
+- Updated Windows/Linux agent capabilities to match the expanded native macOS agent surface.
+
 ## 1.2.0
 
 - Added Markdown rendering for assistant responses to avoid raw formatting markers in chat.
@@ -8,7 +14,6 @@
 - Added an Electron-based Windows/Linux edition under `CrossPlatform/`.
 - Added GitHub Actions packaging for Windows and Linux release bundles.
 - Added stable latest release asset names, installer scripts, and a GitHub Pages landing page.
-- Expanded local agent tools for coding workflows, project tests, git/GitHub publishing, browser actions, email, and MCP stdio integrations.
 - Added tests for reasoning/thinking parsing.
 
 ## 1.1.0

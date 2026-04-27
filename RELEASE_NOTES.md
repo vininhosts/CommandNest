@@ -1,10 +1,10 @@
-# CommandNest 1.2.0
+# CommandNest 1.3.0
 
-UI polish and cross-platform expansion release.
+Agent expansion release.
 
 ## Download
 
-macOS: download `CommandNest-macOS.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder. The versioned `CommandNest-1.2.0-4.zip` asset is also included for archival installs.
+macOS: download `CommandNest-macOS.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder. The versioned `CommandNest-1.3.0-5.zip` asset is also included for archival installs.
 
 Windows/Linux: download the matching `CommandNest-win32-*.zip` or `CommandNest-linux-*.tar.gz` asset from this release.
 
@@ -25,13 +25,11 @@ irm https://raw.githubusercontent.com/vininhosts/CommandNest/main/Scripts/instal
 
 ## Highlights
 
-- Markdown rendering for assistant responses, so `**bold**` and code formatting render cleanly.
-- Collapsible Thinking panel for provider reasoning and `<think>...</think>` output, keeping the final answer clean.
-- Searchable model picker in both the assistant window and Settings.
-- Windows/Linux Electron edition with tray menu, global `Alt+Space`, OpenRouter streaming, secure API key storage, launch at login, and local agent tools.
-- Expanded agent tools for code search/editing, project test runs, git/GitHub publishing, browser actions, email, and MCP stdio integrations.
-- GitHub Actions packaging for Windows and Linux release assets.
-- Additional tests for reasoning/thinking parsing.
+- Expanded native macOS agent tools for code search/editing, project test runs, git/GitHub publishing, browser actions, email, and MCP stdio integrations.
+- Expanded Windows/Linux agent tools for code editing, test runs, git/GitHub publishing, browser/search actions, email drafts, and MCP stdio integrations.
+- Added built-in MCP presets for filesystem, GitHub, and Playwright browser servers, plus user-configurable `mcp.json` support.
+- Added safety coverage requiring confirmation for browser page reads/control, email sending, GitHub publishing, and external MCP tool calls.
+- Updated documentation, privacy notes, security guidance, and landing page copy for the expanded agent capabilities.
 
 macOS release builds are ad-hoc signed unless a maintainer builds them with a Developer ID certificate. Windows/Linux bundles are not code signed yet.
 
