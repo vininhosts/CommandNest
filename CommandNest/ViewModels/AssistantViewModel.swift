@@ -354,13 +354,16 @@ final class AssistantViewModel: ObservableObject {
             "create", "make", "write", "edit", "modify", "change", "organize",
             "organise", "move", "rename", "delete", "trash", "copy", "read",
             "list", "show", "find", "search", "inspect", "open", "run",
-            "execute", "install", "build", "test", "fix", "debug"
+            "execute", "install", "build", "test", "fix", "debug", "send",
+            "email", "mail", "browse", "browser", "commit", "push",
+            "pull request", "release", "github", "mcp"
         ]
         let localTargets = [
             "file", "files", "folder", "folders", "directory", "directories",
             "downloads", "desktop", "documents", "project", "app", "code",
             "terminal", "command", "script", "repo", "repository", ".swift",
-            ".md", ".txt", "~/", "/users/"
+            ".md", ".txt", "~/", "/users/", "github", "browser", "safari",
+            "chrome", "website", "web page", "email", "mail", "mcp", "server"
         ]
 
         if normalized.contains("on my mac")

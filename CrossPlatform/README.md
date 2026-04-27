@@ -11,7 +11,7 @@ This is the Windows and Linux edition of CommandNest. It uses Electron so the gl
 - Markdown response rendering
 - Separate collapsible Thinking panel for model reasoning or `<think>...</think>` output
 - Secure API key storage through Electron `safeStorage`
-- Local agent mode with file, folder, shell, and open-item tools
+- Local agent mode with file, folder, code edit, test, shell, git/GitHub, browser, email draft, and MCP tools
 - Windows and Linux packaging through GitHub Actions
 
 ## Run Locally
@@ -38,4 +38,22 @@ Open Settings, paste your OpenRouter API key, and save. The key is encrypted wit
 
 ## Permissions
 
-The app can only access paths and shell capabilities the current OS user can access. Agent write, shell, open, move, copy, and trash actions show a confirmation prompt when confirmation is enabled.
+The app can only access paths and shell capabilities the current OS user can access. Agent write, shell, open, move, copy, trash, browser, email draft, git/GitHub publish, and MCP tool actions show a confirmation prompt when confirmation is enabled.
+
+## MCP
+
+The Electron edition includes the same MCP stdio bridge as the macOS app. Built-in presets are available for `filesystem`, `github`, and `browser`, and users can add more servers in `~/.commandnest/mcp.json` or the Electron user-data `mcp.json` file:
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "npx",
+      "args": ["-y", "some-mcp-server"],
+      "env": {}
+    }
+  }
+}
+```
+
+External MCP servers run as local processes. Review and approve MCP tool calls carefully.

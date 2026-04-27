@@ -6,7 +6,7 @@
 [![Windows/Linux](https://img.shields.io/github/actions/workflow/status/vininhosts/CommandNest/cross-platform.yml?branch=main&label=Windows%20%2F%20Linux&style=flat-square)](https://github.com/vininhosts/CommandNest/actions/workflows/cross-platform.yml)
 [![License](https://img.shields.io/github/license/vininhosts/CommandNest?style=flat-square)](LICENSE)
 
-CommandNest is a lightweight desktop AI assistant. The primary app is a native macOS menu bar assistant: press `Option + Space`, type a prompt, and get a streamed OpenRouter response in a floating command palette. When a request is clearly local, CommandNest can also act on your Mac: organize files, create files, inspect folders, run shell commands, and open items. A Windows/Linux Electron edition lives in `CrossPlatform/`.
+CommandNest is a lightweight desktop AI assistant. The primary app is a native macOS menu bar assistant: press `Option + Space`, type a prompt, and get a streamed OpenRouter response in a floating command palette. When a request is clearly local, CommandNest can also act on your Mac: organize files, create and edit code, run tests, control browsers, prepare or send email, use git/GitHub, run shell commands, and call MCP servers. A Windows/Linux Electron edition lives in `CrossPlatform/`.
 
 Website: [vininhosts.github.io/CommandNest](https://vininhosts.github.io/CommandNest/)
 
@@ -25,7 +25,7 @@ Website: [vininhosts.github.io/CommandNest](https://vininhosts.github.io/Command
 - API key stored in macOS Keychain
 - In-memory conversation with editable system prompt
 - Menu bar app behavior using `LSUIElement`
-- Local Agent Mode with filesystem, shell, and open-item tools
+- Local Agent Mode with filesystem, coding, shell, browser, email, git/GitHub, and MCP tools
 - Native local actions for organizing folders, undoing organization, and creating text files
 - Settings for API key, model list, selected model, system prompt, agent access, launch at login, and shortcut recording
 
@@ -164,9 +164,9 @@ Bundled fallback models:
 
 ## Local Agent Mode
 
-Settings includes `Enable local agent mode`, which is on by default for agent-like behavior. Normal chat still streams. CommandNest switches to local agent mode only when the prompt looks like a file, folder, app, code, shell, or Mac action.
+Settings includes `Enable local agent mode`, which is on by default for agent-like behavior. Normal chat still streams. CommandNest switches to local agent mode only when the prompt looks like a file, folder, app, code, shell, browser, email, GitHub, MCP, or computer action.
 
-Settings also includes `Ask before local file, app, or shell actions`, which is on by default. Read-only directory listing and text-file reading can proceed without a prompt; writes, moves, Trash, shell commands, app/URL opens, and native file organization show a confirmation dialog first.
+Settings also includes `Ask before high-impact agent actions`, which is on by default. Read-only directory listing, text-file reading, file search, text search, git status, and git diff can proceed without a prompt; writes, moves, Trash, shell commands, browser control, email actions, GitHub uploads, external MCP calls, and native file organization show a confirmation dialog first.
 
 When local agent mode is used, the selected OpenRouter model can ask CommandNest to:
 
@@ -179,6 +179,14 @@ When local agent mode is used, the selected OpenRouter model can ask CommandNest
 - Move files and folders to Trash
 - Run `zsh` shell commands
 - Open files, folders, apps, or URLs
+- Search files and grep project text
+- Replace text in files
+- Infer and run common project test commands
+- Check git status and diffs
+- Commit, push, create GitHub pull requests, and create GitHub releases through the `gh` CLI
+- Navigate Safari/Chrome, read front-tab text, execute front-tab JavaScript, and open web searches
+- Compose email drafts or send through Apple Mail after confirmation
+- List and call tools on configured MCP stdio servers
 
 CommandNest also has native local actions that run before the model is called and do not require an API key:
 
@@ -199,10 +207,36 @@ The assistant window keeps a compact activity log for local agent actions so use
 Useful permissions:
 
 - Full Disk Access: needed for broad file access, including protected folders.
-- Accessibility: needed for future desktop/UI control workflows and some automation.
+- Accessibility and Automation: needed for AppleScript browser and Mail control.
 - Screen Recording: needed for future screen-aware workflows.
 
 CommandNest cannot grant these permissions to itself. Use the buttons in Settings to open the correct System Settings panes, then enable CommandNest.
+
+## MCP Integrations
+
+CommandNest includes a generic MCP stdio bridge. The agent can list configured MCP servers, list server tools, and call MCP tools with user confirmation. Built-in presets are included for:
+
+- `filesystem`: `npx -y @modelcontextprotocol/server-filesystem <home>`
+- `github`: `npx -y @modelcontextprotocol/server-github`
+- `browser`: `npx -y @playwright/mcp@latest`
+
+You can add or override MCP servers in either `~/.commandnest/mcp.json` or the app support `mcp.json` file. Use the common Claude-style format:
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "npx",
+      "args": ["-y", "some-mcp-server"],
+      "env": {
+        "TOKEN": "value"
+      }
+    }
+  }
+}
+```
+
+External MCP tools can do powerful things. CommandNest treats `mcp_call_tool` as high impact and asks before running it.
 
 ## Updates
 

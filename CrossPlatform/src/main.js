@@ -450,8 +450,8 @@ async function completeChat(apiKey, model, messages) {
 
 function shouldUseLocalAgent(prompt) {
   const normalized = prompt.toLowerCase();
-  const actionWords = ['create', 'make', 'write', 'edit', 'modify', 'change', 'organize', 'move', 'rename', 'delete', 'trash', 'copy', 'read', 'list', 'show', 'find', 'search', 'inspect', 'open', 'run', 'execute', 'install', 'build', 'test', 'fix', 'debug'];
-  const targets = ['file', 'files', 'folder', 'folders', 'directory', 'directories', 'downloads', 'desktop', 'documents', 'project', 'app', 'code', 'terminal', 'command', 'script', 'repo', 'repository', '.js', '.ts', '.md', '.txt', '~/', '/users/', 'c:\\'];
+  const actionWords = ['create', 'make', 'write', 'edit', 'modify', 'change', 'organize', 'move', 'rename', 'delete', 'trash', 'copy', 'read', 'list', 'show', 'find', 'search', 'inspect', 'open', 'run', 'execute', 'install', 'build', 'test', 'fix', 'debug', 'send', 'email', 'mail', 'browse', 'browser', 'commit', 'push', 'pull request', 'release', 'github', 'mcp'];
+  const targets = ['file', 'files', 'folder', 'folders', 'directory', 'directories', 'downloads', 'desktop', 'documents', 'project', 'app', 'code', 'terminal', 'command', 'script', 'repo', 'repository', '.js', '.ts', '.md', '.txt', '~/', '/users/', 'c:\\', 'github', 'browser', 'chrome', 'edge', 'firefox', 'website', 'web page', 'email', 'mail', 'mcp', 'server'];
   return normalized.includes('my computer')
     || normalized.includes('this computer')
     || normalized.includes('local machine')
@@ -466,8 +466,25 @@ const toolDefinitions = [
   tool('move_item', 'Move or rename a file or folder.', { source_path: prop('Source path'), destination_path: prop('Destination path') }, ['source_path', 'destination_path']),
   tool('copy_item', 'Copy a file or folder.', { source_path: prop('Source path'), destination_path: prop('Destination path') }, ['source_path', 'destination_path']),
   tool('trash_item', 'Move a file or folder to the Trash/Recycle Bin.', { path: prop('Path') }, ['path']),
-  tool('run_shell_command', 'Run a shell command on the local machine.', { command: prop('Command to run') }, ['command']),
-  tool('open_item', 'Open a file, folder, app, or URL.', { path: prop('Path or URL') }, ['path'])
+  tool('run_shell_command', 'Run a shell command on the local machine.', { command: prop('Command to run'), working_directory: prop('Optional working directory'), timeout_seconds: prop('Optional timeout from 1 to 600 seconds', 'number') }, ['command']),
+  tool('open_item', 'Open a file, folder, app, or URL.', { path: prop('Path or URL') }, ['path']),
+  tool('search_files', 'Search for files or folders by name under a local root path.', { root_path: prop('Root path'), query: prop('Filename or path substring'), max_results: prop('Optional result limit', 'number') }, ['root_path', 'query']),
+  tool('grep_text', 'Search text contents under a local root path using ripgrep when available.', { root_path: prop('Root path'), pattern: prop('Literal or regex pattern'), max_results: prop('Optional result limit', 'number') }, ['root_path', 'pattern']),
+  tool('replace_in_text_file', 'Replace text in a local UTF-8 text file.', { path: prop('File path'), find: prop('Exact text to find'), replacement: prop('Replacement text'), replace_all: prop('Whether to replace all occurrences', 'boolean') }, ['path', 'find', 'replacement']),
+  tool('run_project_tests', 'Run tests for a local project. Provide command for custom projects, or let CommandNest infer common runners.', { project_path: prop('Project root'), command: prop('Optional test command'), timeout_seconds: prop('Optional timeout from 1 to 600 seconds', 'number') }, ['project_path']),
+  tool('git_status', 'Show git status for a local repository.', { repository_path: prop('Local git repository path') }, ['repository_path']),
+  tool('git_diff', 'Show git diff and diff stat for a local repository.', { repository_path: prop('Local git repository path'), pathspec: prop('Optional pathspec'), max_bytes: prop('Optional output size limit', 'number') }, ['repository_path']),
+  tool('git_commit', 'Stage selected paths or all changes and create a git commit.', { repository_path: prop('Local git repository path'), message: prop('Commit message'), paths: prop('Optional comma-separated path list') }, ['repository_path', 'message']),
+  tool('git_push', 'Push a local git branch to a remote.', { repository_path: prop('Local git repository path'), remote: prop('Optional remote name'), branch: prop('Optional branch name') }, ['repository_path']),
+  tool('github_create_pull_request', 'Create a GitHub pull request with the gh CLI.', { repository_path: prop('Local repository path'), title: prop('Pull request title'), body: prop('Pull request body'), base: prop('Optional base branch'), head: prop('Optional head branch'), draft: prop('Create a draft pull request', 'boolean') }, ['repository_path', 'title']),
+  tool('github_create_release', 'Create a GitHub release with the gh CLI.', { repository_path: prop('Local repository path'), tag: prop('Release tag'), title: prop('Optional release title'), notes: prop('Optional release notes'), asset_paths: prop('Optional comma-separated asset paths') }, ['repository_path', 'tag']),
+  tool('browser_navigate', 'Open a URL in the default browser.', { url: prop('Full URL to open') }, ['url']),
+  tool('search_web', 'Open a web search in the default browser.', { query: prop('Search query') }, ['query']),
+  tool('compose_email', 'Open an email draft in the default mail app.', { to: prop('Comma-separated recipients'), cc: prop('Optional CC'), bcc: prop('Optional BCC'), subject: prop('Subject'), body: prop('Body') }, ['to']),
+  tool('send_email', 'Open a completed email draft for review. Automatic send requires a configured OS mail automation or MCP mail server.', { to: prop('Comma-separated recipients'), cc: prop('Optional CC'), bcc: prop('Optional BCC'), subject: prop('Subject'), body: prop('Body') }, ['to', 'subject', 'body']),
+  tool('mcp_list_servers', 'List built-in and user-configured MCP stdio servers available to CommandNest.', {}, []),
+  tool('mcp_list_tools', 'Connect to an MCP stdio server and list its tools.', { server_id: prop('MCP server id'), timeout_seconds: prop('Optional timeout', 'number') }, ['server_id']),
+  tool('mcp_call_tool', 'Call a tool on a configured MCP stdio server. This always requires confirmation because external MCP tools can perform arbitrary actions.', { server_id: prop('MCP server id'), tool_name: prop('MCP tool name'), arguments: prop('Tool arguments as object or JSON string', 'object'), timeout_seconds: prop('Optional timeout', 'number') }, ['server_id', 'tool_name', 'arguments'])
 ];
 
 function prop(description, type = 'string') {
@@ -497,7 +514,7 @@ function agentSystemPrompt(message) {
 
   return `${message.content}
 
-Local Agent Mode is enabled. You are an acting desktop and coding agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, open, or otherwise change something on this computer, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. Destructive operations require user confirmation. After using tools, explain what you changed or found concisely.`;
+Local Agent Mode is enabled. You are an acting desktop, coding, browser, email, GitHub, and MCP agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, browse, send email, commit, push, create a pull request, create a release, call an MCP server, or otherwise change something on this computer, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. Read repository state before editing code, run relevant tests after changes, and summarize exact files or commands used. Sending email, browser control, GitHub uploads, shell commands, writes, and external MCP calls require user confirmation. After using tools, explain what you changed or found concisely.`;
 }
 
 async function runAgent(sender, requestId, apiKey, model, messages, settings) {
@@ -566,7 +583,26 @@ async function completeChatWithTools(apiKey, model, messages) {
 function previewForTool(toolCall) {
   const name = toolCall.function?.name || 'local action';
   const args = parseToolArguments(toolCall);
-  const writeTools = new Set(['write_text_file', 'create_directory', 'move_item', 'copy_item', 'trash_item', 'run_shell_command', 'open_item']);
+  const writeTools = new Set([
+    'write_text_file',
+    'create_directory',
+    'move_item',
+    'copy_item',
+    'trash_item',
+    'run_shell_command',
+    'open_item',
+    'replace_in_text_file',
+    'run_project_tests',
+    'git_commit',
+    'git_push',
+    'github_create_pull_request',
+    'github_create_release',
+    'browser_navigate',
+    'search_web',
+    'compose_email',
+    'send_email',
+    'mcp_call_tool'
+  ]);
   return {
     title: name.replace(/_/g, ' '),
     detail: JSON.stringify(args, null, 2),
@@ -670,9 +706,50 @@ async function executeTool(toolCall) {
         }
         return `Opened ${target}.`;
       }
+      case 'search_files':
+        return searchFiles(args);
+      case 'grep_text':
+        return await grepText(args);
+      case 'replace_in_text_file':
+        return replaceInTextFile(args);
+      case 'run_project_tests':
+        return await runProjectTests(args);
+      case 'git_status':
+        return await runShellCommand(`git -C ${shellQuote(expandPath(args.repository_path))} status --short --branch`, expandPath(args.repository_path), 30);
+      case 'git_diff':
+        return await gitDiff(args);
+      case 'git_commit':
+        return await gitCommit(args);
+      case 'git_push':
+        return await gitPush(args);
+      case 'github_create_pull_request':
+        return await githubCreatePullRequest(args);
+      case 'github_create_release':
+        return await githubCreateRelease(args);
+      case 'browser_navigate':
+        await shell.openExternal(String(args.url || ''));
+        return `Opened ${args.url}.`;
+      case 'search_web': {
+        const url = new URL('https://www.google.com/search');
+        url.searchParams.set('q', String(args.query || ''));
+        await shell.openExternal(url.toString());
+        return `Opened web search for ${args.query}.`;
+      }
+      case 'compose_email':
+        await shell.openExternal(mailtoURL(args));
+        return `Opened an email draft to ${splitList(args.to).join(', ')}.`;
+      case 'send_email':
+        await shell.openExternal(mailtoURL(args));
+        return 'Opened a completed email draft for review. Automatic sending is available through a configured MCP mail server or platform-specific mail automation.';
+      case 'mcp_list_servers':
+        return mcpListServers();
+      case 'mcp_list_tools':
+        return await mcpListTools(args);
+      case 'mcp_call_tool':
+        return await mcpCallTool(args);
       case 'run_shell_command':
         assertSafeShellCommand(String(args.command || ''));
-        return await runShellCommand(String(args.command || ''));
+        return await runShellCommand(String(args.command || ''), args.working_directory ? expandPath(args.working_directory) : os.homedir(), Number(args.timeout_seconds || 60));
       default:
         throw new Error(`Unknown local agent tool: ${toolCall.function.name}`);
     }
@@ -681,12 +758,231 @@ async function executeTool(toolCall) {
   }
 }
 
-function runShellCommand(command) {
+function splitList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+  return String(value || '')
+    .split(/[,\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function shellQuote(value) {
+  if (process.platform === 'win32') {
+    return `"${String(value).replace(/"/g, '\\"')}"`;
+  }
+  return `'${String(value).replace(/'/g, "'\\''")}'`;
+}
+
+function searchFiles(args) {
+  const root = expandPath(args.root_path);
+  const query = String(args.query || '').toLowerCase();
+  const maxResults = Math.min(Math.max(Number(args.max_results || 100), 1), 500);
+  const skip = new Set(['.git', 'node_modules', 'dist', 'build', 'DerivedData', '.build']);
+  const results = [];
+
+  function walk(current) {
+    if (results.length >= maxResults) {
+      return;
+    }
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (skip.has(entry.name)) {
+        continue;
+      }
+      const fullPath = path.join(current, entry.name);
+      if (entry.name.toLowerCase().includes(query) || fullPath.toLowerCase().includes(query)) {
+        results.push(fullPath);
+        if (results.length >= maxResults) {
+          return;
+        }
+      }
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      }
+    }
+  }
+
+  walk(root);
+  return results.join('\n') || 'No matching files found.';
+}
+
+async function grepText(args) {
+  const root = expandPath(args.root_path);
+  const pattern = String(args.pattern || '');
+  const maxResults = Math.min(Math.max(Number(args.max_results || 100), 1), 500);
+  const command = process.platform === 'win32'
+    ? `findstr /spin /c:${shellQuote(pattern)} *`
+    : `if command -v rg >/dev/null 2>&1; then rg -n --hidden --glob '!.git/**' --glob '!node_modules/**' --glob '!dist/**' --glob '!build/**' ${shellQuote(pattern)} ${shellQuote(root)} | head -n ${maxResults}; else grep -RIn --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build ${shellQuote(pattern)} ${shellQuote(root)} | head -n ${maxResults}; fi`;
+  return await runShellCommand(command, root, Number(args.timeout_seconds || 30));
+}
+
+function replaceInTextFile(args) {
+  const target = expandPath(args.path);
+  const find = String(args.find || '');
+  const replacement = String(args.replacement || '');
+  const original = fs.readFileSync(target, 'utf8');
+  if (!original.includes(find)) {
+    return `No matching text found in ${target}.`;
+  }
+
+  const updated = args.replace_all
+    ? original.split(find).join(replacement)
+    : original.replace(find, replacement);
+  const count = args.replace_all ? original.split(find).length - 1 : 1;
+  fs.writeFileSync(target, updated, 'utf8');
+  return `Replaced ${count} occurrence${count === 1 ? '' : 's'} in ${target}.`;
+}
+
+function inferTestCommand(projectPath) {
+  if (fs.existsSync(path.join(projectPath, 'package.json'))) {
+    return 'npm test';
+  }
+  if (fs.existsSync(path.join(projectPath, 'pyproject.toml')) || fs.existsSync(path.join(projectPath, 'pytest.ini'))) {
+    return process.platform === 'win32' ? 'python -m pytest' : 'python3 -m pytest';
+  }
+  if (fs.existsSync(path.join(projectPath, 'Package.swift'))) {
+    return 'swift test';
+  }
+  throw new Error('No test command was provided and no known project test runner was detected.');
+}
+
+async function runProjectTests(args) {
+  const projectPath = expandPath(args.project_path);
+  const command = String(args.command || '').trim() || inferTestCommand(projectPath);
+  return await runShellCommand(command, projectPath, Number(args.timeout_seconds || 120));
+}
+
+async function gitDiff(args) {
+  const repo = expandPath(args.repository_path);
+  const pathspec = String(args.pathspec || '').trim();
+  const diffCommand = pathspec
+    ? `git -C ${shellQuote(repo)} diff -- ${shellQuote(pathspec)}`
+    : `git -C ${shellQuote(repo)} diff`;
+  const output = await runShellCommand(`git -C ${shellQuote(repo)} diff --stat && ${diffCommand}`, repo, 60);
+  return output.slice(0, Number(args.max_bytes || 80000));
+}
+
+async function gitCommit(args) {
+  const repo = expandPath(args.repository_path);
+  const paths = splitList(args.paths);
+  const addCommand = paths.length
+    ? `git -C ${shellQuote(repo)} add -- ${paths.map(shellQuote).join(' ')}`
+    : `git -C ${shellQuote(repo)} add -A`;
+  return await runShellCommand(`${addCommand} && git -C ${shellQuote(repo)} commit -m ${shellQuote(args.message || 'Update')}`, repo, 120);
+}
+
+async function gitPush(args) {
+  const repo = expandPath(args.repository_path);
+  const remote = String(args.remote || 'origin').trim();
+  const branch = String(args.branch || '').trim();
+  return await runShellCommand(`git -C ${shellQuote(repo)} push ${shellQuote(remote)}${branch ? ` ${shellQuote(branch)}` : ''}`, repo, 180);
+}
+
+async function githubCreatePullRequest(args) {
+  const repo = expandPath(args.repository_path);
+  let command = `gh pr create --title ${shellQuote(args.title || 'Update')} --body ${shellQuote(args.body || '')}`;
+  if (args.base) command += ` --base ${shellQuote(args.base)}`;
+  if (args.head) command += ` --head ${shellQuote(args.head)}`;
+  if (args.draft !== false) command += ' --draft';
+  return await runShellCommand(command, repo, 180);
+}
+
+async function githubCreateRelease(args) {
+  const repo = expandPath(args.repository_path);
+  let command = `gh release create ${shellQuote(args.tag)}`;
+  const assets = splitList(args.asset_paths).map((asset) => shellQuote(expandPath(asset)));
+  if (assets.length) command += ` ${assets.join(' ')}`;
+  if (args.title) command += ` --title ${shellQuote(args.title)}`;
+  if (args.notes) command += ` --notes ${shellQuote(args.notes)}`;
+  return await runShellCommand(command, repo, 240);
+}
+
+function mailtoURL(args) {
+  const url = new URL(`mailto:${splitList(args.to).join(',')}`);
+  if (args.subject) url.searchParams.set('subject', String(args.subject));
+  if (args.body) url.searchParams.set('body', String(args.body));
+  if (args.cc) url.searchParams.set('cc', splitList(args.cc).join(','));
+  if (args.bcc) url.searchParams.set('bcc', splitList(args.bcc).join(','));
+  return url.toString();
+}
+
+function mcpServerConfigs() {
+  const builtIns = {
+    filesystem: {
+      name: 'Filesystem MCP',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', os.homedir()],
+      env: {}
+    },
+    github: {
+      name: 'GitHub MCP',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-github'],
+      env: {}
+    },
+    browser: {
+      name: 'Playwright Browser MCP',
+      command: 'npx',
+      args: ['-y', '@playwright/mcp@latest'],
+      env: {}
+    }
+  };
+  for (const candidate of [
+    path.join(os.homedir(), '.commandnest', 'mcp.json'),
+    userDataPath('mcp.json')
+  ]) {
+    if (!fs.existsSync(candidate)) continue;
+    try {
+      const parsed = JSON.parse(fs.readFileSync(candidate, 'utf8'));
+      for (const [id, config] of Object.entries(parsed.mcpServers || {})) {
+        builtIns[id] = {
+          name: config.name || id,
+          command: config.command,
+          args: config.args || [],
+          env: config.env || {}
+        };
+      }
+    } catch {
+      // Ignore invalid optional MCP config so built-in presets keep working.
+    }
+  }
+  return builtIns;
+}
+
+function mcpListServers() {
+  return Object.entries(mcpServerConfigs())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([id, config]) => `${id}: ${config.name}\n  command: ${config.command} ${(config.args || []).map(shellQuote).join(' ')}`)
+    .join('\n\n');
+}
+
+async function mcpListTools(args) {
+  const client = new MCPStdioClient(mcpServerConfig(args.server_id), Number(args.timeout_seconds || 45) * 1000);
+  const result = await client.listTools();
+  return result.map((item) => item.description ? `- ${item.name}: ${item.description}` : `- ${item.name}`).join('\n') || `MCP server ${args.server_id} returned no tools.`;
+}
+
+async function mcpCallTool(args) {
+  const client = new MCPStdioClient(mcpServerConfig(args.server_id), Number(args.timeout_seconds || 90) * 1000);
+  const toolArguments = typeof args.arguments === 'string' ? JSON.parse(args.arguments || '{}') : (args.arguments || {});
+  return await client.callTool(String(args.tool_name || ''), toolArguments);
+}
+
+function mcpServerConfig(serverId) {
+  const config = mcpServerConfigs()[serverId];
+  if (!config) {
+    throw new Error(`Unknown MCP server '${serverId}'. Call mcp_list_servers first.`);
+  }
+  return config;
+}
+
+function runShellCommand(command, cwd = os.homedir(), timeoutSeconds = 60) {
   return new Promise((resolve) => {
     const child = spawn(command, {
       shell: true,
-      cwd: os.homedir(),
-      timeout: 60000,
+      cwd,
+      timeout: Math.min(Math.max(Number(timeoutSeconds || 60), 1), 600) * 1000,
       windowsHide: true
     });
     let output = '';
@@ -695,6 +991,156 @@ function runShellCommand(command) {
     child.on('close', (code) => resolve(`${output}\nExit code: ${code}`.trim()));
     child.on('error', (error) => resolve(`Command failed: ${error.message}`));
   });
+}
+
+class MCPStdioClient {
+  constructor(config, timeoutMs) {
+    this.config = config;
+    this.timeoutMs = timeoutMs;
+    this.nextId = 1;
+    this.buffer = Buffer.alloc(0);
+    this.pending = new Map();
+    this.process = null;
+  }
+
+  async listTools() {
+    return await this.withSession(async () => {
+      const result = await this.request('tools/list', {});
+      return (result.tools || []).map((item) => ({
+        name: item.name,
+        description: item.description || ''
+      })).filter((item) => item.name);
+    });
+  }
+
+  async callTool(name, args) {
+    return await this.withSession(async () => {
+      const result = await this.request('tools/call', { name, arguments: args });
+      return this.renderToolResult(result);
+    });
+  }
+
+  async withSession(callback) {
+    await this.start();
+    try {
+      await this.initialize();
+      return await callback();
+    } finally {
+      this.close();
+    }
+  }
+
+  async start() {
+    this.process = spawn(this.config.command, this.config.args || [], {
+      env: { ...process.env, ...(this.config.env || {}) },
+      shell: false,
+      windowsHide: true
+    });
+
+    this.process.stdout.on('data', (chunk) => {
+      this.buffer = Buffer.concat([this.buffer, chunk]);
+      this.drainMessages();
+    });
+    this.process.stderr.on('data', () => {});
+    this.process.on('exit', () => {
+      for (const { reject } of this.pending.values()) {
+        reject(new Error('MCP server exited before responding.'));
+      }
+      this.pending.clear();
+    });
+    this.process.on('error', (error) => {
+      for (const { reject } of this.pending.values()) {
+        reject(error);
+      }
+      this.pending.clear();
+    });
+  }
+
+  async initialize() {
+    await this.request('initialize', {
+      protocolVersion: '2024-11-05',
+      capabilities: {},
+      clientInfo: {
+        name: 'CommandNest',
+        version: app.getVersion()
+      }
+    });
+    this.send({ jsonrpc: '2.0', method: 'notifications/initialized', params: {} });
+  }
+
+  request(method, params) {
+    const id = this.nextId;
+    this.nextId += 1;
+    const promise = new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`MCP request timed out: ${method}`));
+      }, this.timeoutMs);
+      this.pending.set(id, { resolve, reject, timer });
+    });
+    this.send({ jsonrpc: '2.0', id, method, params });
+    return promise.then((message) => {
+      if (message.error) {
+        throw new Error(message.error.message || JSON.stringify(message.error));
+      }
+      return message.result || {};
+    });
+  }
+
+  send(message) {
+    const body = Buffer.from(JSON.stringify(message), 'utf8');
+    this.process.stdin.write(`Content-Length: ${body.length}\r\n\r\n`);
+    this.process.stdin.write(body);
+  }
+
+  drainMessages() {
+    while (true) {
+      const delimiter = this.buffer.indexOf('\r\n\r\n');
+      if (delimiter === -1) return;
+      const header = this.buffer.slice(0, delimiter).toString('utf8');
+      const match = header.match(/content-length:\s*(\d+)/i);
+      if (!match) {
+        this.buffer = this.buffer.slice(delimiter + 4);
+        continue;
+      }
+      const length = Number(match[1]);
+      const bodyStart = delimiter + 4;
+      const bodyEnd = bodyStart + length;
+      if (this.buffer.length < bodyEnd) return;
+      const body = this.buffer.slice(bodyStart, bodyEnd).toString('utf8');
+      this.buffer = this.buffer.slice(bodyEnd);
+
+      let message;
+      try {
+        message = JSON.parse(body);
+      } catch {
+        continue;
+      }
+      const pending = this.pending.get(message.id);
+      if (!pending) continue;
+      clearTimeout(pending.timer);
+      this.pending.delete(message.id);
+      pending.resolve(message);
+    }
+  }
+
+  renderToolResult(result) {
+    const prefix = result.isError ? 'MCP tool returned an error.\n' : '';
+    if (!Array.isArray(result.content) || !result.content.length) {
+      return prefix + JSON.stringify(result, null, 2);
+    }
+    return prefix + result.content.map((item) => item.text || item.uri || JSON.stringify(item, null, 2)).join('\n');
+  }
+
+  close() {
+    if (!this.process) return;
+    try {
+      this.process.stdin.end();
+    } catch {}
+    if (!this.process.killed) {
+      this.process.kill();
+    }
+  }
 }
 
 ipcMain.handle('settings:get', () => settingsForRenderer());

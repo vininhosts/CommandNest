@@ -74,10 +74,10 @@ struct SettingsView: View {
                             Toggle("Enable local agent mode", isOn: $viewModel.agentModeEnabled)
                                 .toggleStyle(.checkbox)
 
-                            Toggle("Ask before local file, app, or shell actions", isOn: $viewModel.confirmAgentActions)
+                            Toggle("Ask before high-impact agent actions", isOn: $viewModel.confirmAgentActions)
                                 .toggleStyle(.checkbox)
 
-                            Text("When enabled, the assistant can ask the model to read and write local files, run shell commands, and open files, apps, or URLs. macOS may still require privacy permissions for protected locations and desktop control.")
+                            Text("When enabled, the assistant can ask the model to read and write files, edit code, run tests, control browsers, prepare or send email, use git/GitHub, call MCP servers, run shell commands, and open files, apps, or URLs. macOS may still require privacy permissions for protected locations and app automation.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)

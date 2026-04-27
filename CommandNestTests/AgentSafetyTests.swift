@@ -24,6 +24,55 @@ final class AgentSafetyTests: XCTestCase {
         XCTAssertTrue(AgentService.preview(for: shellCall).requiresConfirmation)
     }
 
+    func testHighImpactAgentToolsRequireConfirmation() {
+        let toolCalls = [
+            OpenRouterToolCall(
+                id: "call_email",
+                type: "function",
+                function: .init(
+                    name: "send_email",
+                    arguments: #"{"to":"person@example.com","subject":"Hello","body":"Hi"}"#
+                )
+            ),
+            OpenRouterToolCall(
+                id: "call_browser",
+                type: "function",
+                function: .init(
+                    name: "browser_execute_javascript",
+                    arguments: #"{"browser":"Safari","javascript":"document.title"}"#
+                )
+            ),
+            OpenRouterToolCall(
+                id: "call_browser_read",
+                type: "function",
+                function: .init(
+                    name: "browser_get_page_text",
+                    arguments: #"{"browser":"Safari"}"#
+                )
+            ),
+            OpenRouterToolCall(
+                id: "call_pr",
+                type: "function",
+                function: .init(
+                    name: "github_create_pull_request",
+                    arguments: #"{"repository_path":"~/Project","title":"Update"}"#
+                )
+            ),
+            OpenRouterToolCall(
+                id: "call_mcp",
+                type: "function",
+                function: .init(
+                    name: "mcp_call_tool",
+                    arguments: #"{"server_id":"filesystem","tool_name":"write_file","arguments":{"path":"~/Desktop/a.txt","content":"x"}}"#
+                )
+            )
+        ]
+
+        for toolCall in toolCalls {
+            XCTAssertTrue(AgentService.preview(for: toolCall).requiresConfirmation, "\(toolCall.function.name) should require confirmation")
+        }
+    }
+
     func testToolPreviewDoesNotRequireConfirmationForReadOnlyListing() {
         let call = OpenRouterToolCall(
             id: "call_1",
