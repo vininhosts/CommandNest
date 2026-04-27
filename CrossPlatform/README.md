@@ -11,7 +11,7 @@ This is the Windows and Linux edition of CommandNest. It uses Electron so the gl
 - Markdown response rendering
 - Separate collapsible Thinking panel for model reasoning or `<think>...</think>` output
 - Secure API key storage through Electron `safeStorage`
-- Local agent mode with file, folder, code edit, test, shell, git/GitHub, browser, email draft, and MCP tools
+- Local agent mode with file, folder, code edit, test, shell, git/GitHub, browser, email draft, Gmail MCP send, and MCP tools
 - Windows and Linux packaging through GitHub Actions
 
 ## Run Locally
@@ -53,6 +53,30 @@ The Electron edition includes the same MCP stdio bridge as the macOS app. Built-
       "command": "npx",
       "args": ["-y", "some-mcp-server"],
       "env": {}
+    }
+  }
+}
+```
+
+### Gmail MCP
+
+Name an authenticated Gmail MCP server `gmail` and CommandNest will route Gmail send requests through `gmail_send_email` instead of the default mail app. One compatible setup is [`jasonsum/gmail-mcp-server`](https://github.com/jasonsum/gmail-mcp-server):
+
+```json
+{
+  "mcpServers": {
+    "gmail": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/absolute/path/to/gmail-mcp-server",
+        "run",
+        "gmail",
+        "--creds-file-path",
+        "/absolute/path/to/client_creds.json",
+        "--token-path",
+        "/absolute/path/to/app_tokens.json"
+      ]
     }
   }
 }

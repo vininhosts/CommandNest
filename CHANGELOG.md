@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2
+
+- Added a first-class `gmail_send_email` agent tool that routes Gmail send requests through a configured Gmail MCP server.
+- Updated Gmail/email routing so prompts that mention Gmail prefer MCP over Apple Mail.
+- Documented Gmail MCP configuration with an authenticated `gmail` server.
+
 ## 1.3.1
 
 - Reworked Windows defaults so the Electron app uses `Ctrl+Shift+Space` instead of the OS-reserved `Alt+Space`.

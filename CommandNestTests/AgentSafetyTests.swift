@@ -35,6 +35,14 @@ final class AgentSafetyTests: XCTestCase {
                 )
             ),
             OpenRouterToolCall(
+                id: "call_gmail",
+                type: "function",
+                function: .init(
+                    name: "gmail_send_email",
+                    arguments: #"{"to":"person@example.com","subject":"Hello","body":"Hi"}"#
+                )
+            ),
+            OpenRouterToolCall(
                 id: "call_browser",
                 type: "function",
                 function: .init(

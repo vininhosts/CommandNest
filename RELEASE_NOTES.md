@@ -1,10 +1,10 @@
-# CommandNest 1.3.1
+# CommandNest 1.3.2
 
-Windows reliability release.
+Gmail MCP routing release.
 
 ## Download
 
-macOS: download `CommandNest-macOS.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder. The versioned `CommandNest-1.3.1-6.zip` asset is also included for archival installs.
+macOS: download `CommandNest-macOS.zip`, unzip it, move `CommandNest.app` to `/Applications`, then open it from Finder. The versioned `CommandNest-1.3.2-7.zip` asset is also included for archival installs.
 
 Windows/Linux: download the matching `CommandNest-win32-*.zip` or `CommandNest-linux-*.tar.gz` asset from this release.
 
@@ -25,11 +25,10 @@ irm https://raw.githubusercontent.com/vininhosts/CommandNest/main/Scripts/instal
 
 ## Highlights
 
-- Reworked the Windows edition around native Windows behavior instead of Mac-style menu-bar assumptions.
-- Changed the Windows default global shortcut to `Ctrl+Shift+Space`; existing Windows installs that still have `Alt+Space` saved are migrated automatically.
-- Kept the Windows window visible in the taskbar and stopped auto-hiding it on blur, so Settings and the assistant no longer feel like they disappear.
-- Improved the Windows installer by stopping old running copies, creating Start menu and desktop shortcuts, launching the installed app, and printing the active shortcut.
-- Fixed Windows MCP startup for `npm`/`npx` based servers and replaced fragile `findstr` text search with a built-in Node search path.
+- Added `gmail_send_email`, a high-impact confirmed agent tool that sends through a configured Gmail MCP server.
+- Updated the native macOS app and Windows/Linux Electron edition so Gmail prompts prefer Gmail MCP over Apple Mail or mailto drafts.
+- Added Gmail MCP setup documentation using a `gmail` server in `~/.commandnest/mcp.json`.
+- Kept Apple Mail/default mail draft behavior for non-Gmail email requests.
 
 macOS release builds are ad-hoc signed unless a maintainer builds them with a Developer ID certificate. Windows/Linux bundles are not code signed yet.
 

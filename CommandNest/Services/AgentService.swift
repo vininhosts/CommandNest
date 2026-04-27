@@ -137,7 +137,7 @@ final class AgentService: AgentServicing {
         return """
         \(message.content)
 
-        Local Agent Mode is enabled. You are an acting desktop, coding, browser, email, GitHub, and MCP agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, browse, send email, commit, push, create a pull request, create a release, call an MCP server, or otherwise change something on this Mac, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. Read repository state before editing code, run relevant tests after changes, and summarize exact files or commands used. The user has requested broad local access, but macOS privacy permissions may still block protected locations until granted in System Settings. Sending email, browser control, GitHub uploads, shell commands, writes, and external MCP calls require user confirmation. After using tools, explain what you changed or found concisely.
+        Local Agent Mode is enabled. You are an acting desktop, coding, browser, email, GitHub, and MCP agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, browse, send email, commit, push, create a pull request, create a release, call an MCP server, or otherwise change something on this Mac, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. Read repository state before editing code, run relevant tests after changes, and summarize exact files or commands used. The user has requested broad local access, but macOS privacy permissions may still block protected locations until granted in System Settings. When the user explicitly says Gmail or Google Mail, prefer gmail_send_email through a configured Gmail MCP server instead of Apple Mail. Sending email, browser control, GitHub uploads, shell commands, writes, and external MCP calls require user confirmation. After using tools, explain what you changed or found concisely.
         """
     }
 
@@ -197,6 +197,8 @@ final class AgentService: AgentServicing {
                 result = try composeEmail(arguments)
             case "send_email":
                 result = try await sendEmail(arguments)
+            case "gmail_send_email":
+                result = try await gmailSendEmail(arguments)
             case "mcp_list_servers":
                 result = Self.mcpListServers()
             case "mcp_list_tools":
@@ -701,6 +703,15 @@ final class AgentService: AgentServicing {
     }
 
     private func sendEmail(_ arguments: [String: Any]) async throws -> String {
+        let providerHints = [
+            try Self.optionalStringValue("provider", in: arguments),
+            try Self.optionalStringValue("service", in: arguments),
+            try Self.optionalStringValue("from_account", in: arguments)
+        ].compactMap { $0 }.joined(separator: " ").lowercased()
+        if providerHints.contains("gmail") || providerHints.contains("google mail") {
+            return try await gmailSendEmail(arguments)
+        }
+
         let recipients = Self.listValue("to", in: arguments)
         guard !recipients.isEmpty else {
             throw AgentServiceError.invalidToolArguments("Missing `to` recipient.")
@@ -739,6 +750,57 @@ final class AgentService: AgentServicing {
         """)
 
         return "Sent email to \(recipients.joined(separator: ", "))."
+    }
+
+    private func gmailSendEmail(_ arguments: [String: Any]) async throws -> String {
+        let recipients = Self.listValue("to", in: arguments)
+        guard !recipients.isEmpty else {
+            throw AgentServiceError.invalidToolArguments("Missing `to` recipient.")
+        }
+
+        let subject = try Self.optionalStringValue("subject", in: arguments) ?? ""
+        let body = try Self.optionalStringValue("body", in: arguments) ?? ""
+        let htmlBody = try Self.optionalStringValue("html_body", in: arguments)
+        let cc = Self.listValue("cc", in: arguments)
+        let bcc = Self.listValue("bcc", in: arguments)
+        let extraArguments = try Self.dictionaryValue("mcp_arguments", in: arguments)
+        let server = try Self.gmailMCPServerConfig()
+        let client = MCPStdioClient(config: server, timeout: 120)
+        let tools = try await client.listTools()
+        let toolName = try Self.gmailSendToolName(from: tools)
+        let payloads = Self.gmailSendPayloads(
+            server: server,
+            recipients: recipients,
+            cc: cc,
+            bcc: bcc,
+            subject: subject,
+            body: body,
+            htmlBody: htmlBody,
+            extraArguments: extraArguments
+        )
+
+        var errors: [String] = []
+        for payload in payloads {
+            let output: String
+            do {
+                output = try await client.callTool(name: toolName, arguments: payload)
+                if output.localizedCaseInsensitiveContains("MCP tool returned an error") {
+                    errors.append(output)
+                    continue
+                }
+            } catch {
+                errors.append(error.localizedDescription)
+                continue
+            }
+            return "Sent Gmail through MCP server `\(server.id)` using tool `\(toolName)`.\n\(output)"
+        }
+
+        let lastError = errors.last ?? "The Gmail MCP server did not accept CommandNest's Gmail payload formats."
+        throw AgentServiceError.invalidToolArguments("""
+        Gmail MCP server `\(server.id)` is configured, but sending failed.
+        \(lastError)
+        Check the server's required credentials/tool schema, or pass provider-specific values through `mcp_arguments`.
+        """)
     }
 
     private static func mcpListServers() -> String {
@@ -908,6 +970,126 @@ final class AgentService: AgentServicing {
         return server
     }
 
+    private static func gmailMCPServerConfig() throws -> MCPServerConfig {
+        let servers = mcpServerConfigs()
+        if let exact = servers.first(where: { $0.id.caseInsensitiveCompare("gmail") == .orderedSame }) {
+            return exact
+        }
+        if let gmail = servers.first(where: {
+            $0.id.localizedCaseInsensitiveContains("gmail")
+                || $0.name.localizedCaseInsensitiveContains("gmail")
+                || $0.name.localizedCaseInsensitiveContains("google mail")
+        }) {
+            return gmail
+        }
+
+        throw AgentServiceError.invalidToolArguments("""
+        No Gmail MCP server is configured. Add one named `gmail` to ~/.commandnest/mcp.json, then try again.
+        Example:
+        {
+          "mcpServers": {
+            "gmail": {
+              "command": "uv",
+              "args": ["--directory", "/absolute/path/to/gmail-mcp-server", "run", "gmail", "--creds-file-path", "/absolute/path/to/client_creds.json", "--token-path", "/absolute/path/to/app_tokens.json"]
+            }
+          }
+        }
+        """)
+    }
+
+    private static func gmailSendToolName(from tools: [MCPToolInfo]) throws -> String {
+        let preferredNames = [
+            "send-email",
+            "send_email",
+            "gmail_send_email",
+            "gmail-send-email",
+            "sendEmail",
+            "send_gmail",
+            "gmail_send",
+            "send"
+        ]
+        for preferredName in preferredNames {
+            if let match = tools.first(where: { $0.name.caseInsensitiveCompare(preferredName) == .orderedSame }) {
+                return match.name
+            }
+        }
+
+        if let inferred = tools.first(where: {
+            let haystack = "\($0.name) \($0.description)".lowercased()
+            return haystack.contains("send") && (haystack.contains("email") || haystack.contains("gmail"))
+        }) {
+            return inferred.name
+        }
+
+        let available = tools.map(\.name).joined(separator: ", ")
+        throw AgentServiceError.invalidToolArguments("The configured Gmail MCP server does not expose a recognizable send-email tool. Available tools: \(available)")
+    }
+
+    private static func gmailSendPayloads(
+        server: MCPServerConfig,
+        recipients: [String],
+        cc: [String],
+        bcc: [String],
+        subject: String,
+        body: String,
+        htmlBody: String?,
+        extraArguments: [String: Any]
+    ) -> [[String: Any]] {
+        let recipientList = recipients.joined(separator: ", ")
+        var common: [String: Any] = [
+            "subject": subject,
+            "body": body,
+            "message": body,
+            "text": body
+        ]
+        if let htmlBody {
+            common["html_body"] = htmlBody
+            common["html"] = htmlBody
+        }
+        if !cc.isEmpty {
+            common["cc"] = cc.joined(separator: ", ")
+        }
+        if !bcc.isEmpty {
+            common["bcc"] = bcc.joined(separator: ", ")
+        }
+
+        for (key, value) in gmailCredentialArguments(from: server.env) {
+            common[key] = value
+        }
+        for (key, value) in extraArguments {
+            common[key] = value
+        }
+
+        var payloads: [[String: Any]] = []
+        payloads.append(common.merging(["to": recipientList]) { current, _ in current })
+        payloads.append(common.merging(["to": recipients]) { current, _ in current })
+        payloads.append(common.merging(["recipients": recipients]) { current, _ in current })
+        payloads.append(common.merging(["recipient": recipientList]) { current, _ in current })
+
+        if recipients.count == 1, let recipient = recipients.first {
+            payloads.append(common.merging(["recipient_id": recipient]) { current, _ in current })
+            payloads.append([
+                "recipient_id": recipient,
+                "subject": subject,
+                "message": body
+            ].merging(extraArguments) { _, new in new })
+        }
+
+        return payloads
+    }
+
+    private static func gmailCredentialArguments(from env: [String: String]) -> [String: String] {
+        [
+            "google_access_token": env["GOOGLE_ACCESS_TOKEN"] ?? env["GMAIL_GOOGLE_ACCESS_TOKEN"],
+            "google_refresh_token": env["GOOGLE_REFRESH_TOKEN"] ?? env["GMAIL_GOOGLE_REFRESH_TOKEN"],
+            "google_client_id": env["GOOGLE_CLIENT_ID"] ?? env["GMAIL_GOOGLE_CLIENT_ID"],
+            "google_client_secret": env["GOOGLE_CLIENT_SECRET"] ?? env["GMAIL_GOOGLE_CLIENT_SECRET"]
+        ].compactMapValues { value in
+            let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed?.isEmpty == false ? trimmed : nil
+        }
+    }
+
     private static func mcpServerConfigs() -> [MCPServerConfig] {
         var servers = builtInMCPServerConfigs()
         for server in configuredMCPServers() {
@@ -1064,6 +1246,10 @@ final class AgentService: AgentServicing {
             let to = listValue("to", in: arguments).joined(separator: ", ")
             let subject = (try? optionalStringValue("subject", in: arguments)) ?? ""
             return AgentToolPreview(toolName: name, title: "Send Email", detail: "\(to)\n\(subject)", requiresConfirmation: true)
+        case "gmail_send_email":
+            let to = listValue("to", in: arguments).joined(separator: ", ")
+            let subject = (try? optionalStringValue("subject", in: arguments)) ?? ""
+            return AgentToolPreview(toolName: name, title: "Send Gmail via MCP", detail: "\(to)\n\(subject)", requiresConfirmation: true)
         case "mcp_list_servers":
             return AgentToolPreview(toolName: name, title: "List MCP Servers", detail: "Built-in and configured MCP servers", requiresConfirmation: false)
         case "mcp_list_tools":
@@ -1110,14 +1296,14 @@ final class AgentService: AgentServicing {
             "create", "make", "write", "edit", "modify", "organize", "organise",
             "move", "rename", "delete", "trash", "copy", "read", "list",
             "open", "run", "execute", "install", "build", "test", "fix",
-            "send", "email", "mail", "browse", "browser", "github", "commit",
+            "send", "email", "mail", "gmail", "browse", "browser", "github", "commit",
             "push", "pull request", "release", "mcp"
         ]
 
         let localTargets = [
             "file", "folder", "directory", "downloads", "desktop", "documents",
             "project", "app", "code", "terminal", "command", "script", "repo",
-            "repository", "github", "browser", "safari", "chrome", "email",
+            "repository", "github", "browser", "safari", "chrome", "email", "gmail",
             "mail", "mcp", "server", "website", "web page"
         ]
 
@@ -1455,7 +1641,7 @@ final class AgentService: AgentServicing {
         OpenRouterTool(
             function: .init(
                 name: "send_email",
-                description: "Send an email through Apple Mail. This always requires user confirmation before sending.",
+                description: "Send an email through Apple Mail. For Gmail or Google Mail, use gmail_send_email instead. This always requires user confirmation before sending.",
                 parameters: .init(
                     properties: [
                         "to": .init(type: "string", description: "Comma-separated recipient email addresses."),
@@ -1463,7 +1649,26 @@ final class AgentService: AgentServicing {
                         "bcc": .init(type: "string", description: "Optional comma-separated BCC addresses."),
                         "subject": .init(type: "string", description: "Email subject."),
                         "body": .init(type: "string", description: "Email body."),
-                        "attachment_paths": .init(type: "string", description: "Optional comma-separated local attachment paths.")
+                        "attachment_paths": .init(type: "string", description: "Optional comma-separated local attachment paths."),
+                        "provider": .init(type: "string", description: "Optional provider hint. Use gmail_send_email for Gmail.")
+                    ],
+                    required: ["to", "subject", "body"]
+                )
+            )
+        ),
+        OpenRouterTool(
+            function: .init(
+                name: "gmail_send_email",
+                description: "Send an email through a configured Gmail MCP server named `gmail`. Use this when the user asks to send from Gmail, Google Mail, or their Gmail account. Requires user confirmation and a configured/authenticated Gmail MCP server.",
+                parameters: .init(
+                    properties: [
+                        "to": .init(type: "string", description: "Comma-separated recipient email addresses."),
+                        "cc": .init(type: "string", description: "Optional comma-separated CC addresses."),
+                        "bcc": .init(type: "string", description: "Optional comma-separated BCC addresses."),
+                        "subject": .init(type: "string", description: "Email subject."),
+                        "body": .init(type: "string", description: "Plain text email body."),
+                        "html_body": .init(type: "string", description: "Optional HTML email body for Gmail MCP servers that support it."),
+                        "mcp_arguments": .init(type: "object", description: "Optional provider-specific arguments or credentials required by the configured Gmail MCP server.")
                     ],
                     required: ["to", "subject", "body"]
                 )

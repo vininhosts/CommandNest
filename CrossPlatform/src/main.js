@@ -500,8 +500,8 @@ async function completeChat(apiKey, model, messages) {
 
 function shouldUseLocalAgent(prompt) {
   const normalized = prompt.toLowerCase();
-  const actionWords = ['create', 'make', 'write', 'edit', 'modify', 'change', 'organize', 'move', 'rename', 'delete', 'trash', 'copy', 'read', 'list', 'show', 'find', 'search', 'inspect', 'open', 'run', 'execute', 'install', 'build', 'test', 'fix', 'debug', 'send', 'email', 'mail', 'browse', 'browser', 'commit', 'push', 'pull request', 'release', 'github', 'mcp'];
-  const targets = ['file', 'files', 'folder', 'folders', 'directory', 'directories', 'downloads', 'desktop', 'documents', 'project', 'app', 'code', 'terminal', 'command', 'script', 'repo', 'repository', '.js', '.ts', '.md', '.txt', '~/', '/users/', 'c:\\', 'github', 'browser', 'chrome', 'edge', 'firefox', 'website', 'web page', 'email', 'mail', 'mcp', 'server'];
+  const actionWords = ['create', 'make', 'write', 'edit', 'modify', 'change', 'organize', 'move', 'rename', 'delete', 'trash', 'copy', 'read', 'list', 'show', 'find', 'search', 'inspect', 'open', 'run', 'execute', 'install', 'build', 'test', 'fix', 'debug', 'send', 'email', 'mail', 'gmail', 'browse', 'browser', 'commit', 'push', 'pull request', 'release', 'github', 'mcp'];
+  const targets = ['file', 'files', 'folder', 'folders', 'directory', 'directories', 'downloads', 'desktop', 'documents', 'project', 'app', 'code', 'terminal', 'command', 'script', 'repo', 'repository', '.js', '.ts', '.md', '.txt', '~/', '/users/', 'c:\\', 'github', 'browser', 'chrome', 'edge', 'firefox', 'website', 'web page', 'email', 'mail', 'gmail', 'mcp', 'server'];
   return normalized.includes('my computer')
     || normalized.includes('this computer')
     || normalized.includes('local machine')
@@ -531,7 +531,8 @@ const toolDefinitions = [
   tool('browser_navigate', 'Open a URL in the default browser.', { url: prop('Full URL to open') }, ['url']),
   tool('search_web', 'Open a web search in the default browser.', { query: prop('Search query') }, ['query']),
   tool('compose_email', 'Open an email draft in the default mail app.', { to: prop('Comma-separated recipients'), cc: prop('Optional CC'), bcc: prop('Optional BCC'), subject: prop('Subject'), body: prop('Body') }, ['to']),
-  tool('send_email', 'Open a completed email draft for review. Automatic send requires a configured OS mail automation or MCP mail server.', { to: prop('Comma-separated recipients'), cc: prop('Optional CC'), bcc: prop('Optional BCC'), subject: prop('Subject'), body: prop('Body') }, ['to', 'subject', 'body']),
+  tool('send_email', 'Open a completed email draft in the default mail app. For Gmail or Google Mail, use gmail_send_email instead.', { to: prop('Comma-separated recipients'), cc: prop('Optional CC'), bcc: prop('Optional BCC'), subject: prop('Subject'), body: prop('Body'), provider: prop('Optional provider hint. Use gmail_send_email for Gmail.') }, ['to', 'subject', 'body']),
+  tool('gmail_send_email', 'Send an email through a configured Gmail MCP server named gmail. Use this when the user asks to send from Gmail, Google Mail, or their Gmail account.', { to: prop('Comma-separated recipients'), cc: prop('Optional CC'), bcc: prop('Optional BCC'), subject: prop('Subject'), body: prop('Plain text body'), html_body: prop('Optional HTML body'), mcp_arguments: prop('Optional provider-specific arguments or credentials required by the configured Gmail MCP server', 'object') }, ['to', 'subject', 'body']),
   tool('mcp_list_servers', 'List built-in and user-configured MCP stdio servers available to CommandNest.', {}, []),
   tool('mcp_list_tools', 'Connect to an MCP stdio server and list its tools.', { server_id: prop('MCP server id'), timeout_seconds: prop('Optional timeout', 'number') }, ['server_id']),
   tool('mcp_call_tool', 'Call a tool on a configured MCP stdio server. This always requires confirmation because external MCP tools can perform arbitrary actions.', { server_id: prop('MCP server id'), tool_name: prop('MCP tool name'), arguments: prop('Tool arguments as object or JSON string', 'object'), timeout_seconds: prop('Optional timeout', 'number') }, ['server_id', 'tool_name', 'arguments'])
@@ -564,7 +565,7 @@ function agentSystemPrompt(message) {
 
   return `${message.content}
 
-Local Agent Mode is enabled. You are an acting desktop, coding, browser, email, GitHub, and MCP agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, browse, send email, commit, push, create a pull request, create a release, call an MCP server, or otherwise change something on this computer, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. Read repository state before editing code, run relevant tests after changes, and summarize exact files or commands used. Sending email, browser control, GitHub uploads, shell commands, writes, and external MCP calls require user confirmation. After using tools, explain what you changed or found concisely.`;
+Local Agent Mode is enabled. You are an acting desktop, coding, browser, email, GitHub, and MCP agent, not an advice bot. When the user asks you to create, edit, organize, inspect, move, rename, run, install, build, test, browse, send email, commit, push, create a pull request, create a release, call an MCP server, or otherwise change something on this computer, use tools to do it. Do not answer with generic instructions for tasks you can perform. Prefer the smallest effective action. Use absolute paths when possible. Read repository state before editing code, run relevant tests after changes, and summarize exact files or commands used. When the user explicitly says Gmail or Google Mail, prefer gmail_send_email through a configured Gmail MCP server instead of the default mail app. Sending email, browser control, GitHub uploads, shell commands, writes, and external MCP calls require user confirmation. After using tools, explain what you changed or found concisely.`;
 }
 
 async function runAgent(sender, requestId, apiKey, model, messages, settings) {
@@ -651,6 +652,7 @@ function previewForTool(toolCall) {
     'search_web',
     'compose_email',
     'send_email',
+    'gmail_send_email',
     'mcp_call_tool'
   ]);
   return {
@@ -792,8 +794,13 @@ async function executeTool(toolCall) {
         await shell.openExternal(mailtoURL(args));
         return `Opened an email draft to ${splitList(args.to).join(', ')}.`;
       case 'send_email':
+        if (gmailProviderRequested(args)) {
+          return await gmailSendEmail(args);
+        }
         await shell.openExternal(mailtoURL(args));
         return 'Opened a completed email draft for review. Automatic sending is available through a configured MCP mail server or platform-specific mail automation.';
+      case 'gmail_send_email':
+        return await gmailSendEmail(args);
       case 'mcp_list_servers':
         return mcpListServers();
       case 'mcp_list_tools':
@@ -1032,6 +1039,136 @@ function mailtoURL(args) {
   if (args.cc) url.searchParams.set('cc', splitList(args.cc).join(','));
   if (args.bcc) url.searchParams.set('bcc', splitList(args.bcc).join(','));
   return url.toString();
+}
+
+function gmailProviderRequested(args) {
+  return [args.provider, args.service, args.from_account]
+    .map((value) => String(value || '').toLowerCase())
+    .some((value) => value.includes('gmail') || value.includes('google mail'));
+}
+
+async function gmailSendEmail(args) {
+  const recipients = splitList(args.to);
+  if (!recipients.length) {
+    throw new Error('Missing `to` recipient.');
+  }
+
+  const subject = String(args.subject || '');
+  const body = String(args.body || '');
+  const serverEntry = gmailMCPServerConfig();
+  const [serverId, server] = serverEntry;
+  const client = new MCPStdioClient(server, 120000);
+  const tools = await client.listTools();
+  const toolName = gmailSendToolName(tools);
+  const payloads = gmailSendPayloads(server, {
+    recipients,
+    cc: splitList(args.cc),
+    bcc: splitList(args.bcc),
+    subject,
+    body,
+    htmlBody: args.html_body ? String(args.html_body) : '',
+    extraArguments: objectValue(args.mcp_arguments)
+  });
+
+  const errors = [];
+  for (const payload of payloads) {
+    let output;
+    try {
+      output = await client.callTool(toolName, payload);
+      if (output.toLowerCase().includes('mcp tool returned an error')) {
+        errors.push(output);
+        continue;
+      }
+    } catch (error) {
+      errors.push(error.message);
+      continue;
+    }
+    return `Sent Gmail through MCP server '${serverId}' using tool '${toolName}'.\n${output}`;
+  }
+
+  throw new Error(`Gmail MCP server '${serverId}' is configured, but sending failed. ${errors.at(-1) || 'The server did not accept CommandNest email payloads.'} Check the server credentials/tool schema, or pass provider-specific values through mcp_arguments.`);
+}
+
+function objectValue(value) {
+  if (!value) return {};
+  if (typeof value === 'string') {
+    return JSON.parse(value || '{}');
+  }
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return value;
+  }
+  return {};
+}
+
+function gmailMCPServerConfig() {
+  const servers = Object.entries(mcpServerConfigs());
+  const exact = servers.find(([id]) => id.toLowerCase() === 'gmail');
+  if (exact) return exact;
+  const inferred = servers.find(([id, config]) => {
+    const haystack = `${id} ${config.name || ''}`.toLowerCase();
+    return haystack.includes('gmail') || haystack.includes('google mail');
+  });
+  if (inferred) return inferred;
+
+  throw new Error(`No Gmail MCP server is configured. Add one named 'gmail' to ~/.commandnest/mcp.json, then try again. Example: {"mcpServers":{"gmail":{"command":"uv","args":["--directory","/absolute/path/to/gmail-mcp-server","run","gmail","--creds-file-path","/absolute/path/to/client_creds.json","--token-path","/absolute/path/to/app_tokens.json"]}}}`);
+}
+
+function gmailSendToolName(tools) {
+  const preferred = ['send-email', 'send_email', 'gmail_send_email', 'gmail-send-email', 'sendEmail', 'send_gmail', 'gmail_send', 'send'];
+  for (const name of preferred) {
+    const match = tools.find((tool) => String(tool.name || '').toLowerCase() === name.toLowerCase());
+    if (match) return match.name;
+  }
+
+  const inferred = tools.find((tool) => {
+    const haystack = `${tool.name || ''} ${tool.description || ''}`.toLowerCase();
+    return haystack.includes('send') && (haystack.includes('email') || haystack.includes('gmail'));
+  });
+  if (inferred) return inferred.name;
+
+  throw new Error(`The configured Gmail MCP server does not expose a recognizable send-email tool. Available tools: ${tools.map((tool) => tool.name).join(', ')}`);
+}
+
+function gmailSendPayloads(server, { recipients, cc, bcc, subject, body, htmlBody, extraArguments }) {
+  const recipientList = recipients.join(', ');
+  const common = {
+    subject,
+    body,
+    message: body,
+    text: body,
+    ...gmailCredentialArguments(server.env || {}),
+    ...extraArguments
+  };
+  if (htmlBody) {
+    common.html_body = htmlBody;
+    common.html = htmlBody;
+  }
+  if (cc.length) common.cc = cc.join(', ');
+  if (bcc.length) common.bcc = bcc.join(', ');
+
+  const payloads = [
+    { ...common, to: recipientList },
+    { ...common, to: recipients },
+    { ...common, recipients },
+    { ...common, recipient: recipientList }
+  ];
+
+  if (recipients.length === 1) {
+    payloads.push({ ...common, recipient_id: recipients[0] });
+    payloads.push({ recipient_id: recipients[0], subject, message: body, ...extraArguments });
+  }
+
+  return payloads;
+}
+
+function gmailCredentialArguments(env) {
+  const credentials = {
+    google_access_token: env.GOOGLE_ACCESS_TOKEN || env.GMAIL_GOOGLE_ACCESS_TOKEN,
+    google_refresh_token: env.GOOGLE_REFRESH_TOKEN || env.GMAIL_GOOGLE_REFRESH_TOKEN,
+    google_client_id: env.GOOGLE_CLIENT_ID || env.GMAIL_GOOGLE_CLIENT_ID,
+    google_client_secret: env.GOOGLE_CLIENT_SECRET || env.GMAIL_GOOGLE_CLIENT_SECRET
+  };
+  return Object.fromEntries(Object.entries(credentials).filter(([, value]) => String(value || '').trim()));
 }
 
 function mcpServerConfigs() {

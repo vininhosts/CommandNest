@@ -187,7 +187,7 @@ When local agent mode is used, the selected OpenRouter model can ask CommandNest
 - Check git status and diffs
 - Commit, push, create GitHub pull requests, and create GitHub releases through the `gh` CLI
 - Navigate Safari/Chrome, read front-tab text, execute front-tab JavaScript, and open web searches
-- Compose email drafts or send through Apple Mail after confirmation
+- Compose email drafts, send through Apple Mail, or send through a configured Gmail MCP server after confirmation
 - List and call tools on configured MCP stdio servers
 
 CommandNest also has native local actions that run before the model is called and do not require an API key:
@@ -237,6 +237,34 @@ You can add or override MCP servers in either `~/.commandnest/mcp.json` or the a
   }
 }
 ```
+
+### Gmail MCP
+
+Gmail sending requires an authenticated Gmail MCP server because CommandNest does not hardcode Google OAuth secrets or store Gmail credentials outside your chosen setup. Name the server `gmail` and CommandNest will use `gmail_send_email` for prompts like "send this from my Gmail account".
+
+One compatible setup is the open-source [`jasonsum/gmail-mcp-server`](https://github.com/jasonsum/gmail-mcp-server), which exposes a `send-email` tool and uses a local Google OAuth credential file plus token file. Example:
+
+```json
+{
+  "mcpServers": {
+    "gmail": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/absolute/path/to/gmail-mcp-server",
+        "run",
+        "gmail",
+        "--creds-file-path",
+        "/absolute/path/to/client_creds.json",
+        "--token-path",
+        "/absolute/path/to/app_tokens.json"
+      ]
+    }
+  }
+}
+```
+
+After the Gmail MCP server authenticates, ask CommandNest to send from Gmail. CommandNest confirms before invoking the MCP send tool.
 
 External MCP tools can do powerful things. CommandNest treats `mcp_call_tool` as high impact and asks before running it.
 
